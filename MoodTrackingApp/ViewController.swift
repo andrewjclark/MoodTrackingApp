@@ -34,6 +34,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         tableView.dataSource = self
         tableView.delegate = self
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.dataStoreSaved), name: NSNotification.Name.init("kDataStoreSaved"), object: nil)
+        
+    }
+    
+    func dataStoreSaved() {
+        self.reload()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -44,6 +51,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        reload()
         drawLine()
     }
     
@@ -180,9 +188,24 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.deselectRow(at: indexPath, animated: true)
         
         if indexPath.section == kSectionNewMood {
-            self.queryMood()
+            presentInputView(type: ItemType.mood)
+            // self.queryMood()
         } else if indexPath.section == kSectionNewEvent {
-            self.queryEvent()
+            presentInputView(type: ItemType.event)
+            // self.queryEvent()
+        }
+    }
+    
+    func presentInputView(type: ItemType) {
+        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+            
+            view.currentMode = type
+            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+            view.modalPresentationCapturesStatusBarAppearance = true
+            
+            self.present(view, animated: true, completion: { 
+                
+            })
         }
     }
     
@@ -191,7 +214,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         let alert = UIAlertController(title: "I am feeling...", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
         
-        for eventType in [MoodType.happy, MoodType.excited, MoodType.neutral, MoodType.sad, MoodType.depressed, MoodType.anxious, MoodType.angry, MoodType.sick] {
+        for eventType in [MoodType.happy, MoodType.excited, MoodType.neutral, MoodType.sad, MoodType.depressed, MoodType.anxious, MoodType.angry, MoodType.tired] {
             let event = DataFormatter.moodEmoji(type: eventType)
             
             alert.addAction(UIAlertAction(title: event.emoji + " " + event.name.capitalized, style: UIAlertActionStyle.default, handler: { (action) in

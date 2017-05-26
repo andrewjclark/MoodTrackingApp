@@ -26,8 +26,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
         
-        DataStore.shared.resetLocalNotifs()
         
+        
+        // Current date
+        let currentDate = Date()
+        print("currentDate: \(currentDate)")
+        
+        DataStore.shared.setupLocalNotifs()
         /*
         let newMood = DataStore.shared.newMood()
         newMood.scale = 1.0 // happy
@@ -50,6 +55,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return true
     }
     
+    
+    func setUpLocalNotification(hour: Int, minute: Int) -> Date {
+        
+        // have to use NSCalendar for the components
+        let calendar = NSCalendar(identifier: .gregorian)!;
+        
+        var dateFire = Date()
+        
+        // if today's date is passed, use tomorrow
+        var fireComponents = calendar.components( [NSCalendar.Unit.day, NSCalendar.Unit.month, NSCalendar.Unit.year, NSCalendar.Unit.hour, NSCalendar.Unit.minute], from:dateFire)
+        
+        if (fireComponents.hour! > hour
+            || (fireComponents.hour == hour && fireComponents.minute! >= minute) ) {
+            
+            dateFire = dateFire.addingTimeInterval(86400)  // Use tomorrow's date
+            fireComponents = calendar.components( [NSCalendar.Unit.day, NSCalendar.Unit.month, NSCalendar.Unit.year, NSCalendar.Unit.hour, NSCalendar.Unit.minute], from:dateFire);
+        }
+        
+        // set up the time
+        fireComponents.hour = hour
+        fireComponents.minute = minute
+        
+        // schedule local notification
+        dateFire = calendar.date(from: fireComponents)!
+        return dateFire
+    }
+    
     @available(iOS 10.0, *)
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
@@ -59,10 +91,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             if let rootVC = UIApplication.shared.keyWindow?.rootViewController as? ViewController {
                 if type == 0 {
                     // Mood
-                    rootVC.queryMood()
+                    rootVC.presentInputView(type: ItemType.mood)
                 } else if type == 1 {
                     // Event
-                    rootVC.queryEvent()
+                    rootVC.presentInputView(type: ItemType.event)
                 }
             }
         }

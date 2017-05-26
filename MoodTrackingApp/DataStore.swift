@@ -57,6 +57,7 @@ class DataStore {
         if context.hasChanges {
             do {
                 try context.save()
+                self.postDatabaseSavedNotification()
             } catch {
                 // Replace this implementation with code to handle the error appropriately.
                 // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
@@ -75,6 +76,12 @@ class DataStore {
     
     func newUUID() -> String {
         return UUID().uuidString
+    }
+    
+    func postDatabaseSavedNotification() {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name.init("kDataStoreSaved"), object: nil)
+        }
     }
     
     func newMood() -> Mood {
@@ -223,9 +230,17 @@ class DataStore {
     }
     
     func timeString(seconds: Int) -> String {
+        let days = Int(seconds) / (3600 * 24)
         let hours = Int(seconds) / 3600
         let minutes = Int(seconds) / 60 % 60
         let seconds = Int(seconds) % 60
+        
+        if days > 0 {
+            if days == 1 {
+                return "\(days) day"
+            }
+            return "\(days) days"
+        } else
         
         if hours > 0 {
             if hours == 1 {
@@ -243,7 +258,6 @@ class DataStore {
             }
             return "\(seconds) seconds"
         }
-        
     }
     
     func resetLocalNotifs() {
@@ -287,15 +301,25 @@ class DataStore {
         }
         
         var lastCount = 0
-        var secondsCount = 60 * 60
+        var secondsCount = 3600
         
         for _ in 1...10 {
             
             let content = UNMutableNotificationContent()
             
-            let newTime = lastCount + secondsCount
+            var newTime = lastCount + secondsCount
             
             var bodyString = ""
+            
+            // If the newTime falls between 10pm and 7am then postpone it.
+            let calendar = Calendar.current
+            
+            var hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
+            
+            while hourComponent >= 22 || hourComponent <= 7 {
+                newTime += 3600
+                hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
+            }
             
             // Setup the userInfo so we know what screen to present the user.
             
@@ -311,6 +335,7 @@ class DataStore {
             
             if timeSince < Int.max {
                 bodyString += "\nYour last entry was \(timeString(seconds: timeSince + newTime)) ago."
+                print("bodyString: \(bodyString)")
             }
             
             content.body = bodyString
@@ -327,9 +352,11 @@ class DataStore {
             })
             
             lastCount = newTime
-            secondsCount *= 2
+            secondsCount += 900
         }
     }
-    
-    
 }
+
+
+
+

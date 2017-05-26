@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="15G1510" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="EmojiCollectionViewCell" id="1Xv-Db-D76" customClass="EmojiCollectionViewCell" customModule="MoodTrackingApp" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="115" height="91"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="115" height="91"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vOA-3j-zM8">
+                        <rect key="frame" x="12" y="12" width="91" height="55"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="S2o-CX-Z6c">
+                        <rect key="frame" x="8" y="63" width="99" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="20" id="oIT-Bo-iaz"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+            </view>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="vOA-3j-zM8" secondAttribute="trailing" constant="12" id="0xd-VN-R7I"/>
+                <constraint firstAttribute="trailing" secondItem="S2o-CX-Z6c" secondAttribute="trailing" constant="8" id="47h-fM-Qi2"/>
+                <constraint firstAttribute="bottom" secondItem="S2o-CX-Z6c" secondAttribute="bottom" constant="8" id="8lz-Aw-2Ud"/>
+                <constraint firstAttribute="bottom" secondItem="vOA-3j-zM8" secondAttribute="bottom" constant="24" id="FnN-ND-EgI"/>
+                <constraint firstItem="vOA-3j-zM8" firstAttribute="leading" secondItem="1Xv-Db-D76" secondAttribute="leading" constant="12" id="HqC-oU-AxL"/>
+                <constraint firstItem="S2o-CX-Z6c" firstAttribute="leading" secondItem="1Xv-Db-D76" secondAttribute="leading" constant="8" id="fuL-Dn-mFa"/>
+                <constraint firstItem="vOA-3j-zM8" firstAttribute="top" secondItem="1Xv-Db-D76" secondAttribute="top" constant="12" id="unZ-XO-lnM"/>
+            </constraints>
+            <size key="customSize" width="115" height="91"/>
+            <connections>
+                <outlet property="bottomConstraint" destination="FnN-ND-EgI" id="9GU-bg-p1f"/>
+                <outlet property="mainLabel" destination="vOA-3j-zM8" id="zXT-FL-2Cy"/>
+                <outlet property="titleLabel" destination="S2o-CX-Z6c" id="sCC-53-5Ib"/>
+            </connections>
+            <point key="canvasLocation" x="60.5" y="127.5"/>
+        </collectionViewCell>
+    </objects>
+</document>
