@@ -42,7 +42,7 @@ class SearchInputViewController:UIViewController, UICollectionViewDelegate, UICo
         collectionView.delegate = self
         
         // Fetch results
-        masterResults = DataFormatter.allBundles()
+        // masterResults = DataFormatter.allBundles()
         
         // Setup the masterAliasResults
         for item in masterResults {
@@ -235,6 +235,7 @@ class SearchInputViewController:UIViewController, UICollectionViewDelegate, UICo
     }
     
     func saveAndDismiss(items: [EmojiBundle]) {
+        /*
         for selected in items {
             print("selected: \(selected)")
             if selected.type == ItemType.event {
@@ -249,13 +250,14 @@ class SearchInputViewController:UIViewController, UICollectionViewDelegate, UICo
             } else if selected.type == ItemType.mood {
                 print("selected.type: \(selected.type)")
                 
-                if let moodType = MoodType(rawValue: selected.typeInt) {
+                if let moodType = EventType(rawValue: selected.typeInt) {
                     if let _ = DataStore.shared.newMood(type: moodType, customEmoji: nil, note: nil) {
                         print("Mood made")
                     }
                 }
             }
         }
+        */
         
         DataStore.shared.saveContext()
         

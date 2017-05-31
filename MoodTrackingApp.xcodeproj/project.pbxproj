@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		511DC66B1EDF03640011B05A /* MoodViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511DC66A1EDF03640011B05A /* MoodViewController.swift */; };
 		5122E53A1ED4B35100B7384D /* CircleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5122E5391ED4B35100B7384D /* CircleViewController.swift */; };
 		5122E53C1ED4B59800B7384D /* CircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5122E53B1ED4B59800B7384D /* CircleView.swift */; };
 		5140CB1C1E9E41BA00AD6E81 /* SearchInputViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140CB1B1E9E41BA00AD6E81 /* SearchInputViewController.swift */; };
@@ -14,6 +15,12 @@
 		5140CB201E9E42E300AD6E81 /* EmojiCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140CB1F1E9E42E300AD6E81 /* EmojiCollectionViewCell.swift */; };
 		5140CB221E9E50FE00AD6E81 /* SearchInputHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */; };
 		5140CB241E9E511F00AD6E81 /* SearchInputHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */; };
+		517EAD531EDED30B008C34D3 /* EventTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD521EDED30B008C34D3 /* EventTableViewCell.swift */; };
+		517EAD551EDED34A008C34D3 /* EventTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 517EAD541EDED34A008C34D3 /* EventTableViewCell.xib */; };
+		517EAD571EDEDC09008C34D3 /* EventGraphTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */; };
+		517EAD591EDEDC5B008C34D3 /* EventGraphTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD581EDEDC5B008C34D3 /* EventGraphTableViewCell.swift */; };
+		517EAD5B1EDEE2AD008C34D3 /* StyleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */; };
+		517EAD5D1EDEFE0E008C34D3 /* DayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD5C1EDEFE0E008C34D3 /* DayViewController.swift */; };
 		51D0E9191E894D9A0034458F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D0E9181E894D9A0034458F /* AppDelegate.swift */; };
 		51D0E91B1E894D9A0034458F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D0E91A1E894D9A0034458F /* ViewController.swift */; };
 		51D0E91E1E894D9A0034458F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 51D0E91C1E894D9A0034458F /* Main.storyboard */; };
@@ -47,6 +54,7 @@
 
 /* Begin PBXFileReference section */
 		51102EEA1E8EEAA900B3EFD3 /* MoodTrackingApp 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MoodTrackingApp 2.xcdatamodel"; sourceTree = "<group>"; };
+		511DC66A1EDF03640011B05A /* MoodViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MoodViewController.swift; sourceTree = "<group>"; };
 		5122E5391ED4B35100B7384D /* CircleViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleViewController.swift; sourceTree = "<group>"; };
 		5122E53B1ED4B59800B7384D /* CircleView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleView.swift; sourceTree = "<group>"; };
 		5140CB1B1E9E41BA00AD6E81 /* SearchInputViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchInputViewController.swift; sourceTree = "<group>"; };
@@ -54,6 +62,12 @@
 		5140CB1F1E9E42E300AD6E81 /* EmojiCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiCollectionViewCell.swift; sourceTree = "<group>"; };
 		5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SearchInputHeader.xib; sourceTree = "<group>"; };
 		5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchInputHeader.swift; sourceTree = "<group>"; };
+		517EAD521EDED30B008C34D3 /* EventTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventTableViewCell.swift; sourceTree = "<group>"; };
+		517EAD541EDED34A008C34D3 /* EventTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EventTableViewCell.xib; sourceTree = "<group>"; };
+		517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EventGraphTableViewCell.xib; sourceTree = "<group>"; };
+		517EAD581EDEDC5B008C34D3 /* EventGraphTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventGraphTableViewCell.swift; sourceTree = "<group>"; };
+		517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleHelper.swift; sourceTree = "<group>"; };
+		517EAD5C1EDEFE0E008C34D3 /* DayViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DayViewController.swift; sourceTree = "<group>"; };
 		51D0E9151E894D9A0034458F /* MoodTrackingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoodTrackingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51D0E9181E894D9A0034458F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		51D0E91A1E894D9A0034458F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -126,7 +140,10 @@
 			isa = PBXGroup;
 			children = (
 				51D0E9181E894D9A0034458F /* AppDelegate.swift */,
+				511DC66A1EDF03640011B05A /* MoodViewController.swift */,
 				51D0E91A1E894D9A0034458F /* ViewController.swift */,
+				517EAD5C1EDEFE0E008C34D3 /* DayViewController.swift */,
+				517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */,
 				51D0E9491E894DB30034458F /* DataStore.swift */,
 				51D0E94F1E8954C40034458F /* DataFormatter.swift */,
 				51D0E9511E896F880034458F /* GraphView.swift */,
@@ -135,7 +152,11 @@
 				5140CB1F1E9E42E300AD6E81 /* EmojiCollectionViewCell.swift */,
 				5122E5391ED4B35100B7384D /* CircleViewController.swift */,
 				5122E53B1ED4B59800B7384D /* CircleView.swift */,
+				517EAD521EDED30B008C34D3 /* EventTableViewCell.swift */,
+				517EAD541EDED34A008C34D3 /* EventTableViewCell.xib */,
 				5140CB1D1E9E42D900AD6E81 /* EmojiCollectionViewCell.xib */,
+				517EAD581EDEDC5B008C34D3 /* EventGraphTableViewCell.swift */,
+				517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */,
 				5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */,
 				5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */,
 				51D0E9221E894D9A0034458F /* Assets.xcassets */,
@@ -282,11 +303,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				517EAD551EDED34A008C34D3 /* EventTableViewCell.xib in Resources */,
 				51D0E9261E894D9A0034458F /* LaunchScreen.storyboard in Resources */,
 				51D0E9231E894D9A0034458F /* Assets.xcassets in Resources */,
 				51D0E91E1E894D9A0034458F /* Main.storyboard in Resources */,
 				5140CB221E9E50FE00AD6E81 /* SearchInputHeader.xib in Resources */,
 				5140CB1E1E9E42D900AD6E81 /* EmojiCollectionViewCell.xib in Resources */,
+				517EAD571EDEDC09008C34D3 /* EventGraphTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,6 +334,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				517EAD531EDED30B008C34D3 /* EventTableViewCell.swift in Sources */,
+				511DC66B1EDF03640011B05A /* MoodViewController.swift in Sources */,
+				517EAD5B1EDEE2AD008C34D3 /* StyleHelper.swift in Sources */,
 				51D0E91B1E894D9A0034458F /* ViewController.swift in Sources */,
 				51D0E9501E8954C40034458F /* DataFormatter.swift in Sources */,
 				5122E53A1ED4B35100B7384D /* CircleViewController.swift in Sources */,
@@ -320,7 +346,9 @@
 				5122E53C1ED4B59800B7384D /* CircleView.swift in Sources */,
 				51D0E94A1E894DB30034458F /* DataStore.swift in Sources */,
 				51D0E9191E894D9A0034458F /* AppDelegate.swift in Sources */,
+				517EAD5D1EDEFE0E008C34D3 /* DayViewController.swift in Sources */,
 				51D0E9211E894D9A0034458F /* MoodTrackingApp.xcdatamodeld in Sources */,
+				517EAD591EDEDC5B008C34D3 /* EventGraphTableViewCell.swift in Sources */,
 				51D0E9521E896F880034458F /* GraphView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

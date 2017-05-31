@@ -54,15 +54,13 @@ class CircleView:UIView {
         
         if let context = UIGraphicsGetCurrentContext() {
             
-            let numberOfRings = dataSet.count
-            
             var sectionCount = 0
             
             for section in dataSet {
                 
                 var itemCount = 0
                 
-                for item in section {
+                for _ in section {
                     
                     var color = UIColor(white: 0.8, alpha: 0.5)
                     
@@ -84,15 +82,11 @@ class CircleView:UIView {
     
     func drawEmoji() {
         
-        
         // Remove all the labels
         for label in labels {
             label.removeFromSuperview()
         }
         labels.removeAll()
-        
-        
-        let numberOfRings = dataSet.count
         
         var sectionCount = 0
         
@@ -132,8 +126,6 @@ class CircleView:UIView {
         let attrString = NSAttributedString(string: emoji, attributes: [NSFontAttributeName:UIFont.systemFont(ofSize: fontSize)])
         
         let size = attrString.boundingRect(with: CGSize(width: 1000, height: 1000), options: NSStringDrawingOptions.usesLineFragmentOrigin, context: nil)
-        
-        //print("size: \(size)")
         
         let rect = CGRect(x: geoSet.segmentCenterPoint.x - (size.width / 2) + 1, y: geoSet.segmentCenterPoint.y - (size.height / 2), width: size.width, height: size.height)
         
@@ -235,17 +227,10 @@ class CircleView:UIView {
         
         let ringSpokes = dataSet.count * 2
         
-        // If there are 3 rings then
-        
-        var arcWidth: CGFloat = (self.bounds.width / CGFloat(ringSpokes)) - 5
-        
         // The inner radius
         let radius:CGFloat = (self.bounds.width / CGFloat(ringSpokes))
         
-//        print("arcWidth: \(arcWidth)")
-//        print("radius: \(radius)")
-        
-        var section = Int(distance / radius)
+        let section = Int(distance / radius)
         
         var currentSelectedItem = IndexPath(item: 1000, section: 1000)
         
@@ -254,8 +239,7 @@ class CircleView:UIView {
         }
         
         if section > dataSet.count - 1 {
-            //print("Out of bounds!")
-            //selectedItem = nil
+            // Out of bounds!
         } else {
             //print("section: \(section)")
             
@@ -276,11 +260,7 @@ class CircleView:UIView {
                 consolidatedAngle += (2 * π)
             }
             
-            var itemIndex = Int((consolidatedAngle) / angleSize)
-            
-            //print("angle - originAngle: \(angle - originAngle)")
-            
-            //print("itemIndex: \(itemIndex)")
+            let itemIndex = Int((consolidatedAngle) / angleSize)
             
             // We now have an itemIndex and a section
             selectedItem = IndexPath(row: itemIndex, section: section)

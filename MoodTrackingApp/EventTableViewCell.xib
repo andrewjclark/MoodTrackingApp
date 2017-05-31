@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="15G1510" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="EventTableViewCell" rowHeight="71" id="V57-nY-8PC" customClass="EventTableViewCell" customModule="MoodTrackingApp" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="395" height="71"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="V57-nY-8PC" id="dRG-gW-wQ5">
+                <rect key="frame" x="0.0" y="0.0" width="395" height="70"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="😆" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="seC-1p-wYd">
+                        <rect key="frame" x="4" y="0.0" width="54" height="70.5"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="54" id="GTD-7H-ydT"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Wasted Time" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Py9-GF-bYk">
+                        <rect key="frame" x="58" y="0.0" width="207" height="70.5"/>
+                        <fontDescription key="fontDescription" type="system" weight="light" pointSize="24"/>
+                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="11.30pm" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="z7n-Um-j1r">
+                        <rect key="frame" x="265" y="0.0" width="120" height="70.5"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="120" id="OyD-ym-UYo"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" weight="light" pointSize="24"/>
+                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="seC-1p-wYd" firstAttribute="leading" secondItem="dRG-gW-wQ5" secondAttribute="leading" constant="4" id="5Dh-oF-wNh"/>
+                    <constraint firstItem="Py9-GF-bYk" firstAttribute="leading" secondItem="seC-1p-wYd" secondAttribute="trailing" id="SMM-SO-Rju"/>
+                    <constraint firstItem="Py9-GF-bYk" firstAttribute="top" secondItem="dRG-gW-wQ5" secondAttribute="top" id="ToV-mr-hgK"/>
+                    <constraint firstItem="seC-1p-wYd" firstAttribute="top" secondItem="dRG-gW-wQ5" secondAttribute="top" id="VxJ-XI-NWo"/>
+                    <constraint firstItem="z7n-Um-j1r" firstAttribute="leading" secondItem="Py9-GF-bYk" secondAttribute="trailing" id="iqD-SZ-bDV"/>
+                    <constraint firstItem="z7n-Um-j1r" firstAttribute="top" secondItem="dRG-gW-wQ5" secondAttribute="top" id="jLq-hc-PK4"/>
+                    <constraint firstAttribute="bottom" secondItem="Py9-GF-bYk" secondAttribute="bottom" id="l58-GZ-aac"/>
+                    <constraint firstAttribute="trailing" secondItem="z7n-Um-j1r" secondAttribute="trailing" constant="10" id="llY-LW-jtJ"/>
+                    <constraint firstAttribute="bottom" secondItem="seC-1p-wYd" secondAttribute="bottom" id="mlE-V3-YpJ"/>
+                    <constraint firstAttribute="bottom" secondItem="z7n-Um-j1r" secondAttribute="bottom" id="vYe-YO-qMY"/>
+                </constraints>
+            </tableViewCellContentView>
+            <color key="backgroundColor" red="0.16078431372549021" green="0.6705882352941176" blue="0.91764705882352937" alpha="1" colorSpace="calibratedRGB"/>
+            <connections>
+                <outlet property="emojiLabel" destination="seC-1p-wYd" id="Xwl-5E-4AC"/>
+                <outlet property="mainLabel" destination="Py9-GF-bYk" id="bzd-nK-Obh"/>
+                <outlet property="secondaryLabel" destination="z7n-Um-j1r" id="BLe-tX-BqP"/>
+            </connections>
+            <point key="canvasLocation" x="-4.5" y="-70.5"/>
+        </tableViewCell>
+    </objects>
+</document>

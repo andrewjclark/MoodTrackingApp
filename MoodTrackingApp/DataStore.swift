@@ -84,18 +84,6 @@ class DataStore {
         }
     }
     
-    func newMood() -> Mood {
-        
-        let newMood = NSEntityDescription.insertNewObject(forEntityName: "Mood", into: persistentContainer.viewContext) as! Mood
-        
-        newMood.moodID = newUUID()
-        newMood.date = NSDate()
-        
-        self.setupLocalNotifs()
-        
-        return newMood
-    }
-    
     func newEvent() -> Event {
         
         let newEvent = NSEntityDescription.insertNewObject(forEntityName: "Event", into: persistentContainer.viewContext) as! Event
@@ -109,16 +97,20 @@ class DataStore {
     }
     
     
-    func newMood(type: MoodType, customEmoji: String?, note: String?) -> Mood? {
-        let newMood = self.newMood()
+    func newMood(type: EventType, customEmoji: String?, note: String?, date: Date?) -> Event? {
+        let newMood = self.newEvent()
         newMood.type = Int16(type.rawValue)
         newMood.note = note
+        
+        if let date = date {
+            newMood.date = date as NSDate
+        }
         
         return newMood
     }
     
     
-    func newEvent(type: EventType, customEmoji: String?, note: String?) -> Event? {
+    func newEvent(type: EventType, customEmoji: String?, note: String?, date: Date?) -> Event? {
         
         let newEvent = self.newEvent()
         
@@ -126,20 +118,11 @@ class DataStore {
         newEvent.customEmoji = customEmoji
         newEvent.note = note
         
+        if let date = date {
+            newEvent.date = date as NSDate
+        }
+        
         return newEvent
-    }
-    
-    
-    func moodFetchRequest(_ predicate:NSPredicate?) -> NSFetchRequest<Mood> {
-        
-        let fetchRequest = NSFetchRequest<Mood>(entityName: "Mood")
-        fetchRequest.predicate = predicate
-        
-        // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "date", ascending: false)
-        fetchRequest.sortDescriptors = [sortDescriptor]
-        
-        return fetchRequest
     }
     
     func eventFetchRequest(_ predicate:NSPredicate?) -> NSFetchRequest<Event> {
@@ -153,20 +136,7 @@ class DataStore {
         
         return fetchRequest
     }
-    
-    func fetchAllMoods() -> [Mood]? {
-        
-        let fetchRequest = moodFetchRequest(NSPredicate(value: true))
-        
-        do {
-            let results = try self.persistentContainer.viewContext.fetch(fetchRequest)
-            
-            return results
-        } catch {
-            return nil
-        }
-    }
-    
+ 
     func fetchAllEvents() -> [Event]? {
         
         let fetchRequest = eventFetchRequest(NSPredicate(value: true))
@@ -180,34 +150,10 @@ class DataStore {
         }
     }
     
-    
-    func deleteMood(mood: Mood) {
-        self.persistentContainer.viewContext.delete(mood)
-    }
-    
     func deleteEvent(event: Event) {
         self.persistentContainer.viewContext.delete(event)
     }
     
-    func printAllMoods() {
-        let fetchRequest = moodFetchRequest(NSPredicate(value: true))
-        print("Start of print")
-        
-        do {
-            let results = try self.persistentContainer.viewContext.fetch(fetchRequest)
-            
-            print("results.count: \(results.count)")
-            
-            for result in results {
-                print("\(result.moodID) \(result.type) \(result.date)")
-            }
-            
-            print("End of print")
-            
-        } catch {
-            
-        }
-    }
     
     func printAllEvents() {
         let fetchRequest = eventFetchRequest(NSPredicate(value: true))
@@ -276,18 +222,6 @@ class DataStore {
         
         var timeSince = Int.max
         
-        if let moods = self.fetchAllMoods() {
-            if let date = moods.first?.date {
-                
-                let tempSince:Int = Int(Date().timeIntervalSince(date as Date))
-                
-                if tempSince < timeSince {
-                    timeSince = tempSince
-                    type = NotifType.event
-                }
-            }
-        }
-        
         if let events = self.fetchAllEvents() {
             if let date = events.first?.date {
                 
@@ -295,7 +229,14 @@ class DataStore {
                 
                 if tempSince < timeSince {
                     timeSince = tempSince
-                    type = NotifType.mood
+                    
+                    if events.first!.type >= 1000 {
+                        // It's an event
+                        type = NotifType.mood
+                    } else {
+                        // It's a mood
+                        type = NotifType.event
+                    }
                 }
             }
         }

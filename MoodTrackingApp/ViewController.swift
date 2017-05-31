@@ -8,35 +8,91 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+public enum GroupType {
+    case day
+    case month
+}
+
+class EventRange:CustomStringConvertible {
+    var startDate = Date()
+    var endDate = Date()
+    var events = [Event]()
+    var type = GroupType.day
+    
+    var description: String {
+        let df = DateFormatter()
+        df.timeStyle = DateFormatter.Style.short
+        df.dateStyle = DateFormatter.Style.short
+        
+        return "EventRange: \(df.string(from: startDate)) to \(df.string(from: endDate)) with type \(type) and \(events.count) events"
+    }
+    
+    func startDateString() -> String {
+        let df = DateFormatter()
+        df.dateFormat = "EEE, d MMM"
+        
+        if type == .day {
+            if startDate.startOfDay == Date().startOfDay {
+                // This is todays date! Try and post it now.
+                return "Today"
+            } else {
+                return df.string(from: startDate)
+            }
+        } else {
+            // Month
+            df.dateFormat = "MMMM, YYYY"
+            return df.string(from: startDate)
+        }
+    }
+}
+
+
+class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource {
 
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var graphView: GraphView!
     
-    let kSectionNewMood = 0
-    let kSectionNewEvent = 1
+    let kSectionNewMood = -1
+    let kSectionNewEvent = -1
     
-    let kSectionMoods = 2
+    let kSectionDays = 0
+    let kSectionMoods = -1
     
-    let kSectionsCount = 3
+    let kSectionsCount = 1
     
-    var results = [Any]()
+    var results = [Event]()
+    var resultsByDay = [EventRange]()
     
-    @IBOutlet weak var topLabel: UILabel!
-    @IBOutlet weak var midLabel: UILabel!
-    @IBOutlet weak var lowLabel: UILabel!
+    var viewType = GroupType.month
     
-    @IBOutlet weak var styleSelcetor: UISegmentedControl!
+    @IBOutlet weak var newButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        self.view.backgroundColor = UIColor.moodBlue
+        tableView.backgroundColor = UIColor.moodBlue
+        
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.separatorStyle = UITableViewCellSeparatorStyle.none
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 100, right: 0)
+        
+        newButton.clipsToBounds = true
+        newButton.layer.cornerRadius = 44
+        newButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 0)
+        /*
+        newButton.layer.shadowColor = UIColor.black.cgColor
+        newButton.layer.shadowOffset = CGSize(width: 0, height: 10)
+        newButton.layer.shadowOpacity = 1.0
+        */
+        
+        for cellName in ["EventTableViewCell", "EventGraphTableViewCell"] {
+            let nib = UINib(nibName: cellName, bundle: nil)
+            tableView.register(nib, forCellReuseIdentifier: cellName)
+        }
         
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.dataStoreSaved), name: NSNotification.Name.init("kDataStoreSaved"), object: nil)
-        
     }
     
     func dataStoreSaved() {
@@ -46,22 +102,19 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         reload()
-        drawLine()
+        
+        self.navigationController?.navigationBar.isHidden = true
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         reload()
-        drawLine()
+        
+        self.navigationController?.navigationBar.isHidden = true
     }
     
     func date(item: Any) -> NSDate {
-        
-        if let item = item as? Mood {
-            if let date = item.date {
-                return date
-            }
-        } else if let item = item as? Event {
+        if let item = item as? Event {
             if let date = item.date {
                 return date
             }
@@ -71,19 +124,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func updateDataSource() {
-        if let fetchedMoods = DataStore.shared.fetchAllMoods(), let fetchedEvents = DataStore.shared.fetchAllEvents() {
+        if let fetchedEvents = DataStore.shared.fetchAllEvents() {
             
+            self.results = fetchedEvents
             
-            self.results.removeAll()
-            
-            for item in fetchedMoods {
-                self.results.append(item)
-            }
-            
-            for item in fetchedEvents {
-                self.results.append(item)
-            }
-            
+            /*
             // Sort these items
             self.results.sort(by: { (first, second) -> Bool in
                 
@@ -92,21 +137,132 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 
                 return date1.compare(date2 as Date) == ComparisonResult.orderedDescending
             })
+            */
+            
+            self.resultsByDay.removeAll()
+            
+            let df = DateFormatter()
+            df.timeStyle = DateFormatter.Style.none
+            df.dateStyle = DateFormatter.Style.short
+            
+            /*
+             
+            var currentDateString = ""
+            var currentDay = [Event]()
+            
+            // Iterate through the results and add them to days as needed.
+            
+            for event in fetchedEvents {
+                if let date = event.date {
+                    
+                    let dateString = df.string(from: date as Date)
+                    
+                    print("dateString: \(dateString) vs \(currentDateString)")
+                    
+                    if dateString != currentDateString {
+                        // It's a new day
+                        print("new day")
+                        
+                        if currentDay.count > 0 {
+                            resultsByDay.append(currentDay)
+                        }
+                        
+                        currentDay = [event] // Replace contents
+                        
+                        currentDateString = dateString
+                    } else {
+                        print("add to current day")
+                        
+                        currentDay.append(event)
+                    }
+                    
+                    print("currentDay.count: \(currentDay.count)")
+                }
+            }
+            */
+            
+            // Determine start date for all these days
+            
+            
+            
+            df.timeStyle = DateFormatter.Style.medium
+            df.dateStyle = DateFormatter.Style.medium
+            
+            let currentDate = Date()
+            
+            var eventRanges = [EventRange]()
+            
+            // Get event ranges for each preceeding day.
+            if viewType == .day {
+                for number in 0...60 {
+                    
+                    let newStartDate = currentDate.startOfDay(offset: number * -1)
+                    
+                    let newRange = EventRange()
+                    newRange.startDate = newStartDate
+                    newRange.endDate = newStartDate.endOfDay
+                    newRange.type = GroupType.day
+                    
+                    eventRanges.append(newRange)
+                }
+                
+                df.dateFormat = "DD MMM YYYY"
+            } else if viewType == .month {
+                for number in 0...10 {
+                    
+                    let newStartDate = currentDate.firstDayOfMonth(offset: number * -1).startOfDay
+                    
+                    let newRange = EventRange()
+                    newRange.startDate = newStartDate
+                    newRange.endDate = newStartDate.lastMomentOfMonth()
+                    newRange.type = GroupType.month
+                    
+                    eventRanges.append(newRange)
+                }
+                
+                df.dateFormat = "MMM YYYY"
+            }
+            
+           // We now have the ranges and need to iterate through the events and dump them in there if the days line up.
+            
+            var eventRangeLookup = [String:EventRange]()
+            
+            for range in eventRanges {
+                let string = df.string(from: range.startDate)
+                
+                
+                if eventRangeLookup[string] != nil {
+                    print("Duplicate?!")
+                }
+                
+                eventRangeLookup[string] = range
+            }
+            
+            
+            for event in fetchedEvents {
+                if let date = event.date {
+                    
+                    let dateString = df.string(from: date as Date)
+                    
+                    if let range = eventRangeLookup[dateString] {
+                        range.events.insert(event, at: 0) // The events list ought to be from earliest event to latest, ie, the earlier in the array then the closer to startDate it is. We fetch objects from most recent first and iterate, therefore we insert them at the start, rather than append them.
+                    }
+                }
+            }
+            
+            
+            print("eventRangeLookup: \(eventRangeLookup)")
+            print("")
+            
+            resultsByDay = eventRanges
+            
+            
+            
+            
+            
+            
+            print("resultsByDay: \(resultsByDay)")
         }
-        
-        if self.styleSelcetor.selectedSegmentIndex == 0 {
-            // Mood
-            topLabel.text = "Happy"
-            midLabel.text = "Neutral"
-            lowLabel.text = "Sad"
-        } else {
-           // Tense
-            topLabel.text = "Future"
-            midLabel.text = "Present"
-            lowLabel.text = "Past"
-        }
-        
-        self.drawLine()
     }
     
     func reload() {
@@ -125,47 +281,117 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             return 1
         } else if section == kSectionMoods {
             return results.count
+        } else if section == kSectionDays {
+            return resultsByDay.count
         }
             
         return 0
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 44
+        if indexPath.section == kSectionDays {
+            return tableView.frame.width / (400 / 200)
+        }
+        
+        return 66
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        if indexPath.section == kSectionMoods {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "MoodCell", for: indexPath)
+        if indexPath.section == kSectionDays {
             
-            cell.textLabel?.text = "Unknown"
-            cell.detailTextLabel?.text = nil
+            let graphCell = tableView.dequeueReusableCell(withIdentifier: "EventGraphTableViewCell", for: indexPath) as! EventGraphTableViewCell
             
-            if let mood = results[indexPath.row] as? Mood {
+            if let days = resultsByDay[indexPath.row].events as? [Event] {
                 
-                let moodEmoji = DataFormatter.moodEmoji(typeInt: Int(mood.type))
+                graphCell.type = resultsByDay[indexPath.row].type
                 
-                cell.textLabel?.text = "\(moodEmoji.emoji) - \(moodEmoji.name)"
+                // Find the average mood from this range.
                 
-                if let date = mood.date {
-                    cell.detailTextLabel?.text = DataFormatter.shortDate(date: date as Date)
-                } else {
-                    cell.detailTextLabel?.text = nil
+                var count:Int = 0
+                var moodSum:Float = 0
+                
+                for event in days {
+                    if event.type > 0 && event.type < 1000 {
+                        // It's a mood
+                        
+                        let emoji = DataFormatter.moodEmoji(typeInt: Int(event.type))
+                        
+                        moodSum += emoji.linearMood
+                        count += 1
+                    }
                 }
-            } else if let event = results[indexPath.row] as? Event {
                 
-                let eventEmoji = DataFormatter.eventEmoji(typeInt: Int(event.type))
-                cell.textLabel?.text = "\(eventEmoji.emoji) \(eventEmoji.name)"
+                var averageMoodEmoji:String?
                 
-                if let date = event.date {
-                    cell.detailTextLabel?.text = DataFormatter.shortDate(date: date as Date)
+                if count > 0 {
+                    let averageMood = moodSum / Float(count)
+                    
+                    if averageMood >= -1 {
+                        // Sad
+                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad).emoji
+                    }
+                    
+                    if averageMood >= -0.6 {
+                        // Down
+                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.down).emoji
+                    }
+                    
+                    if averageMood >= -0.2 {
+                        // Neutral
+                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral).emoji
+                    }
+                    
+                    if averageMood >= 0.2 {
+                        // Calm
+                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm).emoji
+                    }
+                    
+                    if averageMood >= 0.6 {
+                        // Great
+                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited).emoji
+                    }
+                }
+                
+                let dateString = resultsByDay[indexPath.row].startDateString()
+                
+                if let averageMoodEmoji = averageMoodEmoji {
+                    graphCell.layout(events: days, title: "\(averageMoodEmoji) \(dateString)")
                 } else {
-                    cell.detailTextLabel?.text = nil
+                    graphCell.layout(events: days, title: dateString)
                 }
             }
             
-            return cell
+            graphCell.backgroundColor = UIColor.clear
+            
+            return graphCell
+            
+            // EventGraphTableViewCell
+            
+        } else if indexPath.section == kSectionMoods {
+            
+            let eventCell = tableView.dequeueReusableCell(withIdentifier: "EventTableViewCell", for: indexPath) as! EventTableViewCell
+            
+            let event = results[indexPath.row]
+            
+            let eventEmoji = DataFormatter.emoji(typeInt: Int(event.type))
+            
+            eventCell.emojiLabel.text = eventEmoji.emoji
+            eventCell.mainLabel.text = eventEmoji.name.capitalized
+            
+            let df = DateFormatter()
+            df.timeStyle = DateFormatter.Style.short
+            df.dateStyle = DateFormatter.Style.none
+            
+            if let date = event.date {
+                eventCell.secondaryLabel.text = df.string(from: date as Date)
+            } else {
+                eventCell.secondaryLabel.text = "?"
+            }
+            
+            eventCell.backgroundColor = UIColor.clear
+            
+            return eventCell
         } else if indexPath.section == kSectionNewMood {
             // Cell
             let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
@@ -193,132 +419,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         } else if indexPath.section == kSectionNewEvent {
             presentInputView(type: ItemType.event)
             // self.queryEvent()
-        }
-    }
-    
-    func presentInputView(type: ItemType) {
-        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+        } else if indexPath.section == kSectionDays {
             
-            view.currentMode = type
-            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
-            view.modalPresentationCapturesStatusBarAppearance = true
+            let range = resultsByDay[indexPath.row]
             
-            self.present(view, animated: true, completion: { 
+            if let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DayViewController") as? DayViewController {
                 
-            })
-        }
-    }
-    
-    func queryMood() {
-        // Query user for mood
-        
-        let alert = UIAlertController(title: "I am feeling...", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
-        
-        for eventType in [MoodType.happy, MoodType.excited, MoodType.neutral, MoodType.sad, MoodType.depressed, MoodType.anxious, MoodType.angry, MoodType.tired] {
-            let event = DataFormatter.moodEmoji(type: eventType)
-            
-            alert.addAction(UIAlertAction(title: event.emoji + " " + event.name.capitalized, style: UIAlertActionStyle.default, handler: { (action) in
-                self.createMood(type: eventType)
-            }))
-        }
-        
-        alert.addAction(UIAlertAction(title: "❓ Other", style: UIAlertActionStyle.default, handler: { (action) in
-            self.queryMoreMoods()
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
-            
-        }))
-        
-        self.present(alert, animated: true, completion: {
-            
-        })
-    }
-    
-    func queryMoreMoods() {
-        // Query user for mood
-        
-        let alert = UIAlertController(title: "I am feeling...", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
-        
-        var stringItems = [String]()
-        var nameToEvent = [String:MoodType]()
-        
-        for scale in 1...MoodType.count {
-            if let type = MoodType(rawValue: scale) {
-                let event = DataFormatter.moodEmoji(type: type)
-                stringItems.append(event.name)
-                nameToEvent[event.name] = type
+                vc.eventRange = range
+                
+                navigationController?.pushViewController(vc, animated: true)
             }
         }
-        
-        stringItems.sort()
-        
-        for string in stringItems {
-            if let eventType = nameToEvent[string] {
-                
-                let event = DataFormatter.moodEmoji(type: eventType)
-                
-                alert.addAction(UIAlertAction(title: event.emoji + " " + event.name.capitalized, style: UIAlertActionStyle.default, handler: { (action) in
-                    self.createMood(type: eventType)
-                }))
-            }
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
-            
-        }))
-        
-        self.present(alert, animated: true, completion: {
-            
-        })
-    }
-    
-    func queryEvent() {
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
-        
-        var stringItems = [String]()
-        var nameToEvent = [String:EventType]()
-        
-        for scale in 1...EventType.count {
-            if let type = EventType(rawValue: scale) {
-                let event = DataFormatter.eventEmoji(type: type)
-                stringItems.append(event.name)
-                nameToEvent[event.name] = type
-            }
-        }
-        
-        stringItems.sort()
-        
-        for string in stringItems {
-            if let eventType = nameToEvent[string] {
-                
-                let event = DataFormatter.eventEmoji(type: eventType)
-                
-                alert.addAction(UIAlertAction(title: event.emoji + " " + event.name.capitalized, style: UIAlertActionStyle.default, handler: { (action) in
-                    self.createEvent(type: eventType)
-                }))
-            }
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
-            
-        }))
-        
-        self.present(alert, animated: true, completion: {
-            
-        })
-    }
-    
-    func createMood(type: MoodType) {
-        let _ = DataStore.shared.newMood(type: type, customEmoji: nil, note: nil)
-        DataStore.shared.saveContext()
-        self.reload()
-    }
-    
-    func createEvent(type: EventType) {
-        let _ = DataStore.shared.newEvent(type: type, customEmoji: nil, note: nil)
-        DataStore.shared.saveContext()
-        self.reload()
     }
     
     override func didReceiveMemoryWarning() {
@@ -327,22 +438,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
 
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-        if indexPath.section == kSectionMoods {
-            return [UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Delete", handler: { (action, indexPath) in
+        if indexPath.section == kSectionDays {
+            return [UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Clear", handler: { (action, indexPath) in
                 
-                if let mood = self.results[indexPath.row] as? Mood {
-                    DataStore.shared.deleteMood(mood: mood)
+                let range = self.resultsByDay[indexPath.row]
+                
+                let alertView = UIAlertController(title: "Delete All Events?", message: nil, preferredStyle: UIAlertControllerStyle.alert)
+                
+                alertView.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
+                    
+                }))
+
+                alertView.addAction(UIAlertAction(title: "Delete", style: UIAlertActionStyle.destructive, handler: { (action) in
+                    
+                    for event in range.events {
+                        DataStore.shared.deleteEvent(event: event)
+                    }
+                    
+                    range.events = [Event]()
                     
                     DataStore.shared.saveContext()
-                    self.updateDataSource()
-                    self.tableView.deleteRows(at: [indexPath], with: UITableViewRowAnimation.fade)
-                } else if let event = self.results[indexPath.row] as? Event {
-                    DataStore.shared.deleteEvent(event: event)
                     
-                    DataStore.shared.saveContext()
-                    self.updateDataSource()
-                    self.tableView.deleteRows(at: [indexPath], with: UITableViewRowAnimation.fade)
-                }
+                    self.tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
+                }))
+                
+                self.present(alertView, animated: true, completion: { 
+                    
+                })
             })]
         }
         
@@ -353,128 +475,65 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         coordinator.animate(alongsideTransition: { (context) in
             
         }) { (context) in
-            self.drawLine()
+            self.reload()
         }
     }
     
-    func drawLine() {
-        if results.count > 0 {
-            
-            var subResults = [Any]()
-            
-            if results.count > 10 {
-                subResults = Array(results[0...10])
-            } else {
-                subResults = results
-            }
-            
-            var width:Float = 0.5
-            
-            if subResults.count > 1 {
-                width = 1.0 / Float(subResults.count - 1)
-            }
-            
-            // Need to get the min and max dates in this range
-            /*
-            var lowDate = Int.max
-            var highDate = Int.min
-            
-            for result in subResults {
-                if let result = result as? Mood {
-                    if let date = result.date {
-                        let thisDate:Int = Int(date.timeIntervalSince1970)
-                        
-                        if thisDate < lowDate {
-                            lowDate = thisDate
-                        }
-                        
-                        if thisDate > highDate {
-                            highDate = thisDate
-                        }
-                    }
-                }
-            }
-            
-            print("lowDate:  \(lowDate)")
-            print("highDate: \(highDate)")
-            
-            if lowDate < Int.max && highDate > Int.min {
-                highDate -= lowDate
-                
-                print("lowDate:  \(lowDate)")
-                print("highDate: \(highDate)")
-                
-                print("")
-                
-                
-            }
-            
- */
-            
-            var items = [Float]()
-            var dists = [Float]()
-            var labels = [String]()
-            
-            var count = 0
-            var lastResult:Float = 0.5
-            
-            for result in subResults.reversed() {
-                if let result = result as? Mood {
-                    
-                    let moodEmoji = DataFormatter.moodEmoji(typeInt: Int(result.type))
-                    
-                    labels.append(moodEmoji.emoji)
-                    
-                    var scale = (moodEmoji.linearMood - 1) / -2
-                    
-                    if styleSelcetor.selectedSegmentIndex == 1 {
-                        scale = (moodEmoji.tense - 1) / -2
-                    }
-                    
-                    lastResult = scale
-                    items.append(Float(scale))
-                    
-                    var xPos:Float = 1 - (width * Float(count))
-                    
-                    if subResults.count == 1 {
-                        xPos = 0.5
-                    }
-                    
-                    //                        if let date = result.date {
-                    //                            let thisDate:Int = Int(date.timeIntervalSince1970)
-                    //                            xPos = 1 - (Float(thisDate - lowDate) / Float(highDate))
-                    //                        }
-                    
-                    dists.append(xPos)
-                    
-                    count += 1
-                    
-                } else if let result = result as? Event {
-                    
-                    let eventEmoji = DataFormatter.eventEmoji(typeInt: Int(result.type))
-                    
-                    labels.append(eventEmoji.emoji + "*")
-                    
-                    items.append(Float(lastResult))
-                    
-                    let xPos:Float = 1 - (width * Float(count))
-                    
-                    dists.append(xPos)
-                    
-                    count += 1
-                }
-            }
-            
-            graphView.updateLabels(results: items, dist: dists, labels: labels)
-            return
-        }
-        
-        graphView.updateLabels(results: [Float](), dist: [Float](), labels: [String]())
+    @IBAction func userPressedAddButton(_ sender: UIButton) {
+        self.presentInputView(type: ItemType.mood)
     }
     
-    
-    @IBAction func styleSelectorValueChanged(_ sender: UISegmentedControl) {
-        self.updateDataSource()
-    }
 }
 
+
+extension Date {
+    
+    var startOfDay: Date {
+        return Calendar.current.startOfDay(for: self)
+    }
+    
+    func firstDayOfMonth() -> Date {
+        return Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Calendar.current.startOfDay(for: self)))!
+    }
+    
+    func lastMomentOfMonth() -> Date {
+        
+        return Calendar.current.date(byAdding: DateComponents(month: 1, second: -1), to: self.firstDayOfMonth())!
+    }
+    
+    func firstDayOfMonth(offset: Int) -> Date {
+        let calendar: Calendar = Calendar.current
+        var components: DateComponents = calendar.dateComponents([.year, .month, .day], from: self)
+        components.month! += offset
+        components.setValue(1, for: .day)
+        return calendar.date(from: components)!
+    }
+    
+    
+    
+    var middleOfDay: Date {
+        var components = DateComponents()
+        components.hour = 12
+        return Calendar.current.date(byAdding: components, to: startOfDay)!
+    }
+    
+    func startOfDay(offset: Int) -> Date {
+        var components = DateComponents()
+        components.day = offset
+        
+        return Calendar.current.date(byAdding: components, to: self.startOfDay)!
+    }
+    
+    var endOfDay: Date {
+        var components = DateComponents()
+        components.day = 1
+        components.second = -1
+        return Calendar.current.date(byAdding: components, to: startOfDay)!
+    }
+    
+    func addMinutes(offset: Int) -> Date {
+        var components = DateComponents()
+        components.minute = offset
+        return Calendar.current.date(byAdding: components, to: self)!
+    }
+}
