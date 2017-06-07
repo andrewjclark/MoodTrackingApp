@@ -66,7 +66,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         let events = self.eventRange.events
         
         if indexPath.row < events.count {
-            return events[self.eventRange.events.count - 1 - indexPath.row]
+            return events[indexPath.row]
         }
         
         return nil
@@ -142,7 +142,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
     }
     
     func userCreated(event: Event) {
-        eventRange.events.append(event)
+        eventRange.performFetch()
         self.tableView.reloadData()
     }
 }

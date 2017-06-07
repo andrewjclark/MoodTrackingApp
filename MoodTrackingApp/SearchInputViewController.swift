@@ -63,9 +63,8 @@ class SearchInputViewController:UIViewController, UICollectionViewDelegate, UICo
             }
         }
         
-        print("masterAliasResults: \(masterAliasResults)")
-        
-        print("masterAliasResults[drunk]: \(masterAliasResults["drunk"])")
+        //print("masterAliasResults: \(masterAliasResults)")
+        //print("masterAliasResults[drunk]: \(masterAliasResults["drunk"])")
         
         performSearch()
         

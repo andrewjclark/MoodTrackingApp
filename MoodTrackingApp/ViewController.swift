@@ -11,11 +11,14 @@ import UIKit
 public enum GroupType {
     case day
     case month
+    case months
+    case summary
+    case custom
 }
 
 class EventRange:CustomStringConvertible {
     var startDate = Date()
-    var endDate = Date()
+    var endDate:Date?
     var events = [Event]()
     var type = GroupType.day
     
@@ -24,10 +27,19 @@ class EventRange:CustomStringConvertible {
         df.timeStyle = DateFormatter.Style.short
         df.dateStyle = DateFormatter.Style.short
         
-        return "EventRange: \(df.string(from: startDate)) to \(df.string(from: endDate)) with type \(type) and \(events.count) events"
+        if let endDate = endDate {
+            return "EventRange: \(df.string(from: startDate)) to \(df.string(from: endDate)) with type \(type) and \(events.count) events"
+        } else {
+            return "EventRange: \(df.string(from: startDate)) to INFINITY with type \(type) and \(events.count) events"
+        }
     }
     
     func startDateString() -> String {
+        
+        if type == .summary {
+            return "Summary"
+        }
+        
         let df = DateFormatter()
         df.dateFormat = "EEE, d MMM"
         
@@ -38,16 +50,92 @@ class EventRange:CustomStringConvertible {
             } else {
                 return df.string(from: startDate)
             }
+        } else if type == .custom {
+            
+            // Determine how many days ago this is
+            let calendar = NSCalendar.current
+            
+            let date1 = startDate.startOfDay
+            var date2 = Date().startOfDay
+            
+            if let endDate = self.endDate {
+                date2 = endDate
+                
+                if endDate.endOfDay == date2.endOfDay {
+                    // We are doing all of this relative to the current day
+                    
+                    let components = calendar.dateComponents([.day], from: date1, to: date2)
+                    
+                    if let day = components.day {
+                        return "Last \(day) days"
+                    } else {
+                        return "?"
+                    }
+                }
+            }
+            
+            df.dateFormat = "d MMM"
+            
+            return "\(df.string(from: date1)) to \(df.string(from: date2))"
         } else {
+            
             // Month
             df.dateFormat = "MMMM, YYYY"
             return df.string(from: startDate)
         }
     }
+    
+    func numberOfDays() -> Int {
+        
+        // Determine how many days ago this is
+        let calendar = NSCalendar.current
+        
+        let date1 = startDate.startOfDay
+        var date2 = Date().startOfDay
+        
+        if let endDate = self.endDate {
+            date2 = endDate
+        }
+        
+        let components = calendar.dateComponents([.day], from: date1, to: date2)
+        
+        if let day = components.day {
+            return day
+        }
+        
+        return 0
+    }
+    
+    func performFetch() {
+        if let endDate = endDate {
+            if let fetchedEvents = DataStore.shared.fetchEvents(startDate: self.startDate, endDate: endDate) {
+                self.events = fetchedEvents
+            }
+        } else {
+            if let fetchedEvents = DataStore.shared.fetchEvents(startDate: self.startDate, endDate: Date()) {
+                self.events = fetchedEvents
+            }
+        }
+    }
+    
+    func subType() -> GroupType {
+        switch type {
+        case .day:
+            return .day
+        case .month:
+            return .day
+        case .months:
+            return .month
+        case .summary:
+            return .summary
+        case .custom:
+            return .day
+        }
+    }
 }
 
 
-class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource, CircleViewControllerDelegate {
 
     @IBOutlet weak var tableView: UITableView!
     
@@ -59,10 +147,11 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     
     let kSectionsCount = 1
     
-    var results = [Event]()
-    var resultsByDay = [EventRange]()
+    var eventRange:EventRange? // This defines the scope of the fetch event. If null then just show everything.
     
-    var viewType = GroupType.month
+    var resultsByDay = [EventRange]() // Uses the fetched events from eventRange and groups them
+    
+    var summaryRange:GroupType? // If this is nil then show it as a normal view, however if it is non null then this is the top level view controller and should show a top menu and refetch when it changes.
     
     @IBOutlet weak var newButton: UIButton!
     
@@ -70,7 +159,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        self.view.backgroundColor = UIColor.moodBlue
+        view.backgroundColor = UIColor.moodBlue
         tableView.backgroundColor = UIColor.moodBlue
         
         tableView.dataSource = self
@@ -78,14 +167,14 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         tableView.separatorStyle = UITableViewCellSeparatorStyle.none
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 100, right: 0)
         
-        newButton.clipsToBounds = true
+        newButton.clipsToBounds = false
         newButton.layer.cornerRadius = 44
         newButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 0)
-        /*
+        
         newButton.layer.shadowColor = UIColor.black.cgColor
         newButton.layer.shadowOffset = CGSize(width: 0, height: 10)
-        newButton.layer.shadowOpacity = 1.0
-        */
+        newButton.layer.shadowRadius = 10
+        newButton.layer.shadowOpacity = 0.33
         
         for cellName in ["EventTableViewCell", "EventGraphTableViewCell"] {
             let nib = UINib(nibName: cellName, bundle: nil)
@@ -93,24 +182,144 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.dataStoreSaved), name: NSNotification.Name.init("kDataStoreSaved"), object: nil)
+        
+        // Setup the eventrange
+        if eventRange == nil {
+            self.summaryRange = GroupType.summary
+        }
+        
+        
+        updateTitle()
+        
+        
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedBack))
+        
+        // navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Reload", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedReload))
+    }
+    
+    func userTappedTitle() {
+        if summaryRange != nil {
+            // Show menu
+            
+            let alertView = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
+            
+            alertView.addAction(UIAlertAction(title: "Summary", style: UIAlertActionStyle.default, handler: { (action) in
+                self.summaryRange = GroupType.summary
+                self.reload()
+                self.updateTitle()
+            }))
+            
+            alertView.addAction(UIAlertAction(title: "Months", style: UIAlertActionStyle.default, handler: { (action) in
+                self.summaryRange = GroupType.months
+                self.reload()
+                self.updateTitle()
+            }))
+            
+            alertView.addAction(UIAlertAction(title: "Days", style: UIAlertActionStyle.default, handler: { (action) in
+                self.summaryRange = GroupType.month
+                self.reload()
+                self.updateTitle()
+            }))
+            
+            alertView.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
+                
+            }))
+            
+            present(alertView, animated: true, completion: {
+                
+            })
+            
+        }
+    }
+    
+    func userPressedBack() {
+        if let nav = navigationController {
+            nav.popViewController(animated: true)
+        }
+    }
+    
+    func updateTitle() {
+        var newTitle = ""
+        
+        if summaryRange != nil {
+            newTitle = "  "
+        }
+        
+        if let summaryRange = summaryRange {
+            switch summaryRange {
+            case .summary:
+                newTitle += "Summary"
+            case .months:
+                newTitle += "Months"
+            case .month:
+                newTitle += "Days"
+            default:
+                newTitle += "???"
+            }
+            
+        } else if let eventRange = eventRange {
+            newTitle += eventRange.startDateString()
+        }
+        
+        let newTitleAttr = NSMutableAttributedString(string: newTitle, attributes: [NSFontAttributeName : UIFont.systemFont(ofSize: 18, weight: UIFontWeightMedium), NSForegroundColorAttributeName:UIColor.white])
+        
+        // Add a down arrow
+        if summaryRange != nil {
+            
+            
+            newTitleAttr.append(NSAttributedString(string: " ▼", attributes: [NSFontAttributeName : UIFont.systemFont(ofSize: 12, weight: UIFontWeightMedium), NSForegroundColorAttributeName:UIColor.white.withAlphaComponent(0.5)]))
+        }
+        
+        // Setup the UILabel
+        
+        if let label = navigationItem.titleView as? UILabel {
+            label.removeFromSuperview()
+        }
+        
+        // Make it
+        
+        // Setup title tap
+        let tapRec = UITapGestureRecognizer(target: self, action: #selector(ViewController.userTappedTitle))
+        
+        let titleView = UILabel()
+        titleView.attributedText = newTitleAttr
+        titleView.backgroundColor = UIColor.clear
+        titleView.isUserInteractionEnabled = true
+        self.navigationItem.titleView = titleView
+        titleView.sizeToFit()
+        
+        if summaryRange != nil {
+            if let titleView = self.navigationItem.titleView {
+                titleView.addGestureRecognizer(tapRec)
+            }
+        }
+        
+        navigationController?.navigationBar.barStyle = UIBarStyle.blackOpaque
+        navigationController?.navigationBar.tintColor = UIColor.white
+        navigationController?.navigationBar.barTintColor = UIColor.moodBlue
+        navigationController?.navigationBar.isTranslucent = false
+    }
+    
+    
+    func userPressedReload() {
+        self.reload()
     }
     
     func dataStoreSaved() {
-        self.reload()
+        //self.reload()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         reload()
-        
-        self.navigationController?.navigationBar.isHidden = true
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        reload()
+    override func prefersHiddenNavBar() -> Bool {
+        if summaryRange != nil {
+            // return true
+        }
         
-        self.navigationController?.navigationBar.isHidden = true
+        return false
     }
     
     func date(item: Any) -> NSDate {
@@ -124,145 +333,195 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     func updateDataSource() {
-        if let fetchedEvents = DataStore.shared.fetchAllEvents() {
+        
+        if let summaryRange = summaryRange {
             
-            self.results = fetchedEvents
+            // Create an event range
+            let newRange = EventRange()
             
-            /*
-            // Sort these items
-            self.results.sort(by: { (first, second) -> Bool in
-                
-                let date1 = self.date(item: first)
-                let date2 = self.date(item: second)
-                
-                return date1.compare(date2 as Date) == ComparisonResult.orderedDescending
-            })
-            */
-            
-            self.resultsByDay.removeAll()
-            
-            let df = DateFormatter()
-            df.timeStyle = DateFormatter.Style.none
-            df.dateStyle = DateFormatter.Style.short
-            
-            /*
-             
-            var currentDateString = ""
-            var currentDay = [Event]()
-            
-            // Iterate through the results and add them to days as needed.
-            
-            for event in fetchedEvents {
-                if let date = event.date {
-                    
-                    let dateString = df.string(from: date as Date)
-                    
-                    print("dateString: \(dateString) vs \(currentDateString)")
-                    
-                    if dateString != currentDateString {
-                        // It's a new day
-                        print("new day")
-                        
-                        if currentDay.count > 0 {
-                            resultsByDay.append(currentDay)
-                        }
-                        
-                        currentDay = [event] // Replace contents
-                        
-                        currentDateString = dateString
-                    } else {
-                        print("add to current day")
-                        
-                        currentDay.append(event)
-                    }
-                    
-                    print("currentDay.count: \(currentDay.count)")
-                }
+            switch summaryRange {
+            case .summary:
+                newRange.startDate = Date().firstDayOfMonth(offset: -3)
+            case .months:
+                newRange.startDate = Date().firstDayOfMonth(offset: -12)
+            case .month:
+                newRange.startDate = Date().firstDayOfMonth(offset: -3)
+            default:
+                newRange.startDate = Date().firstDayOfMonth(offset: -3)
             }
-            */
-            
-            // Determine start date for all these days
             
             
+            newRange.type = summaryRange
             
-            df.timeStyle = DateFormatter.Style.medium
-            df.dateStyle = DateFormatter.Style.medium
+            self.eventRange = newRange
+        }
+        
+        
+        
+        
+        
+        
+        if let eventRange = eventRange {
+            // We have an event range, use these events
+            print("eventRange.type: \(eventRange.type)")
+            print("eventRange.startDate: \(eventRange.startDate)")
+            print("eventRange.endDate: \(eventRange.endDate)")
             
-            let currentDate = Date()
+            // We need to fetch these results.
             
-            var eventRanges = [EventRange]()
+            eventRange.performFetch()
             
-            // Get event ranges for each preceeding day.
-            if viewType == .day {
-                for number in 0...60 {
+            if eventRange.type == .summary {
+                
+                // Get events for today
+                
+                var newResultsByDay = [EventRange]()
+                
+                
+                let todayStartDate = Date().startOfDay
+                let weekStartDate = Date().startOfDay(offset: -7)
+                let monthStartDate = Date().startOfDay(offset: -30)
+                let thisMonthStartDate = Date().firstDayOfMonth(offset: 0).startOfDay
+                let lastMonthStartDate = Date().firstDayOfMonth(offset: -1).startOfDay
+                
+                
+                let dayRange = EventRange()
+                dayRange.startDate = todayStartDate
+                dayRange.endDate = Date().endOfDay
+                dayRange.type = .day
+                dayRange.performFetch()
+                
+                newResultsByDay.append(dayRange)
+                
+                
+                let weekRange = EventRange()
+                weekRange.startDate = weekStartDate
+                weekRange.endDate = Date().endOfDay
+                weekRange.type = .custom
+                weekRange.performFetch()
+                
+                newResultsByDay.append(weekRange)
+                
+                
+                let monthRange = EventRange()
+                monthRange.startDate = monthStartDate
+                monthRange.endDate = Date().endOfDay
+                monthRange.type = .custom
+                monthRange.performFetch()
+                
+                newResultsByDay.append(monthRange)
+                
+                // This Month
+                for number in 0...6 {
+                    let thisMonthRange = EventRange()
+                    thisMonthRange.startDate = Date().firstDayOfMonth(offset: number * -1).startOfDay
+                    thisMonthRange.endDate = thisMonthRange.startDate.lastMomentOfMonth()
+                    thisMonthRange.type = .month
+                    thisMonthRange.performFetch()
                     
-                    let newStartDate = currentDate.startOfDay(offset: number * -1)
+                    newResultsByDay.append(thisMonthRange)
+                }
+                
+                
+                
+                self.resultsByDay = newResultsByDay
+                
+            } else {
+                self.resultsByDay = eventRanges(from: eventRange.events, type: eventRange.subType(), withinRange: eventRange) // We need to reverse these results due to the way event order gets flipping in this method. TODO.
+            }
+        }
+    }
+    
+    func eventRanges(from events: [Event], type: GroupType, withinRange:EventRange?) -> [EventRange] {
+        
+        let df = DateFormatter()
+        
+        df.timeStyle = DateFormatter.Style.medium
+        df.dateStyle = DateFormatter.Style.medium
+        
+        var eventRanges = [EventRange]()
+        
+        // Get event ranges for each preceeding day.
+        if let event = withinRange {
+            // This is a scoped event range, get the days / months within it.
+            
+            var currentDate = event.startDate.startOfDay
+            var endDate = Date()
+            
+            if let newEndDate = event.endDate {
+                endDate = newEndDate
+            }
+            
+            if type == .day {
+                
+                while currentDate < endDate && currentDate < Date()  {
+                    
+                    print("currentDate: \(currentDate)")
                     
                     let newRange = EventRange()
-                    newRange.startDate = newStartDate
-                    newRange.endDate = newStartDate.endOfDay
+                    newRange.startDate = currentDate
+                    newRange.endDate = currentDate.endOfDay
                     newRange.type = GroupType.day
                     
                     eventRanges.append(newRange)
+
+                    // Move currentDate up by a day
+                    
+                    currentDate = currentDate.startOfDay(offset: 1)
                 }
                 
+                // Flip the events
+                eventRanges.reverse()
                 df.dateFormat = "DD MMM YYYY"
-            } else if viewType == .month {
-                for number in 0...10 {
+                
+            } else if type == .month {
+                
+                while currentDate < endDate && currentDate < Date()  {
                     
-                    let newStartDate = currentDate.firstDayOfMonth(offset: number * -1).startOfDay
+                    print("currentDate: \(currentDate)")
                     
                     let newRange = EventRange()
-                    newRange.startDate = newStartDate
-                    newRange.endDate = newStartDate.lastMomentOfMonth()
+                    newRange.startDate = currentDate
+                    newRange.endDate = currentDate.lastMomentOfMonth()
                     newRange.type = GroupType.month
                     
                     eventRanges.append(newRange)
+                    
+                    // Move currentDate up by a month
+                    
+                    currentDate = currentDate.firstDayOfMonth(offset: 1).startOfDay
                 }
                 
+                // Flip the events
+                eventRanges.reverse()
                 df.dateFormat = "MMM YYYY"
             }
             
-           // We now have the ranges and need to iterate through the events and dump them in there if the days line up.
-            
-            var eventRangeLookup = [String:EventRange]()
-            
-            for range in eventRanges {
-                let string = df.string(from: range.startDate)
-                
-                
-                if eventRangeLookup[string] != nil {
-                    print("Duplicate?!")
-                }
-                
-                eventRangeLookup[string] = range
-            }
-            
-            
-            for event in fetchedEvents {
-                if let date = event.date {
-                    
-                    let dateString = df.string(from: date as Date)
-                    
-                    if let range = eventRangeLookup[dateString] {
-                        range.events.insert(event, at: 0) // The events list ought to be from earliest event to latest, ie, the earlier in the array then the closer to startDate it is. We fetch objects from most recent first and iterate, therefore we insert them at the start, rather than append them.
-                    }
-                }
-            }
-            
-            
-            print("eventRangeLookup: \(eventRangeLookup)")
-            print("")
-            
-            resultsByDay = eventRanges
-            
-            
-            
-            
-            
-            
-            print("resultsByDay: \(resultsByDay)")
         }
+        
+        // We now have the ranges and need to iterate through the events and dump them in there if the days line up.
+        
+        var eventRangeLookup = [String:EventRange]()
+        
+        for range in eventRanges {
+            let string = df.string(from: range.startDate)
+            eventRangeLookup[string] = range
+        }
+        
+        for event in events {
+            if let date = event.date {
+                
+                let dateString = df.string(from: date as Date)
+                
+                if let range = eventRangeLookup[dateString] {
+                    range.events.append(event)
+                    
+                    //range.events.insert(event, at: 0) // The events list ought to be from earliest event to latest, ie, the earlier in the array then the closer to startDate it is. We fetch objects from most recent first and iterate, therefore we insert them at the start, rather than append them.
+                }
+            }
+        }
+        
+        return eventRanges
     }
     
     func reload() {
@@ -280,7 +539,8 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         if section == kSectionNewMood || section == kSectionNewEvent {
             return 1
         } else if section == kSectionMoods {
-            return results.count
+            return 0
+            //return results.count
         } else if section == kSectionDays {
             return resultsByDay.count
         }
@@ -290,6 +550,13 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == kSectionDays {
+            
+            let range = resultsByDay[indexPath.row]
+            
+            if range.events.count == 0 {
+                return 100
+            }
+            
             return tableView.frame.width / (400 / 200)
         }
         
@@ -302,96 +569,88 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             
             let graphCell = tableView.dequeueReusableCell(withIdentifier: "EventGraphTableViewCell", for: indexPath) as! EventGraphTableViewCell
             
-            if let days = resultsByDay[indexPath.row].events as? [Event] {
-                
-                graphCell.type = resultsByDay[indexPath.row].type
-                
-                // Find the average mood from this range.
-                
-                var count:Int = 0
-                var moodSum:Float = 0
-                
-                for event in days {
-                    if event.type > 0 && event.type < 1000 {
-                        // It's a mood
-                        
-                        let emoji = DataFormatter.moodEmoji(typeInt: Int(event.type))
-                        
-                        moodSum += emoji.linearMood
-                        count += 1
-                    }
-                }
-                
-                var averageMoodEmoji:String?
-                
-                if count > 0 {
-                    let averageMood = moodSum / Float(count)
-                    
-                    if averageMood >= -1 {
-                        // Sad
-                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad).emoji
-                    }
-                    
-                    if averageMood >= -0.6 {
-                        // Down
-                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.down).emoji
-                    }
-                    
-                    if averageMood >= -0.2 {
-                        // Neutral
-                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral).emoji
-                    }
-                    
-                    if averageMood >= 0.2 {
-                        // Calm
-                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm).emoji
-                    }
-                    
-                    if averageMood >= 0.6 {
-                        // Great
-                        averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited).emoji
-                    }
-                }
-                
-                let dateString = resultsByDay[indexPath.row].startDateString()
-                
-                if let averageMoodEmoji = averageMoodEmoji {
-                    graphCell.layout(events: days, title: "\(averageMoodEmoji) \(dateString)")
+            let eventRange = resultsByDay[indexPath.row]
+            
+            let days = eventRange.events
+            
+            graphCell.type = eventRange.type
+            
+            switch eventRange.type {
+            case .day:
+                graphCell.displayFormat = .time
+            case .month:
+                graphCell.displayFormat = .day
+            case .months:
+                graphCell.displayFormat = .day
+            case .summary:
+                graphCell.displayFormat = .day
+            case .custom:
+                if eventRange.numberOfDays() <= 7 {
+                    graphCell.displayFormat = .weekday
                 } else {
-                    graphCell.layout(events: days, title: dateString)
+                    graphCell.displayFormat = .day
                 }
+            }
+            
+            // Find the average mood from this range.
+            
+            var count:Int = 0
+            var moodSum:Float = 0
+            
+            for event in days {
+                if event.type > 0 && event.type < 1000 {
+                    // It's a mood
+                    
+                    let emoji = DataFormatter.moodEmoji(typeInt: Int(event.type))
+                    
+                    moodSum += emoji.linearMood
+                    count += 1
+                }
+            }
+            
+            var averageMoodEmoji:String?
+            
+            if count > 0 {
+                let averageMood = moodSum / Float(count)
+                
+                if averageMood >= -1 {
+                    // Sad
+                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad).emoji
+                }
+                
+                if averageMood >= -0.6 {
+                    // Down
+                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.down).emoji
+                }
+                
+                if averageMood >= -0.2 {
+                    // Neutral
+                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral).emoji
+                }
+                
+                if averageMood >= 0.2 {
+                    // Calm
+                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm).emoji
+                }
+                
+                if averageMood >= 0.6 {
+                    // Great
+                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited).emoji
+                }
+            }
+            
+            let dateString = resultsByDay[indexPath.row].startDateString()
+            
+            if let averageMoodEmoji = averageMoodEmoji {
+                graphCell.layout(events: days.reversed(), title: "\(averageMoodEmoji) \(dateString)")
+            } else {
+                graphCell.layout(events: days.reversed(), title: dateString)
             }
             
             graphCell.backgroundColor = UIColor.clear
             
             return graphCell
             
-            // EventGraphTableViewCell
-            
-        } else if indexPath.section == kSectionMoods {
-            
-            let eventCell = tableView.dequeueReusableCell(withIdentifier: "EventTableViewCell", for: indexPath) as! EventTableViewCell
-            
-            let event = results[indexPath.row]
-            
-            let eventEmoji = DataFormatter.emoji(typeInt: Int(event.type))
-            
-            eventCell.emojiLabel.text = eventEmoji.emoji
-            eventCell.mainLabel.text = eventEmoji.name.capitalized
-            
-            let df = DateFormatter()
-            df.timeStyle = DateFormatter.Style.short
-            df.dateStyle = DateFormatter.Style.none
-            
-            if let date = event.date {
-                eventCell.secondaryLabel.text = df.string(from: date as Date)
-            } else {
-                eventCell.secondaryLabel.text = "?"
-            }
-            
-            eventCell.backgroundColor = UIColor.clear
-            
-            return eventCell
         } else if indexPath.section == kSectionNewMood {
             // Cell
             let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
@@ -423,12 +682,30 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             
             let range = resultsByDay[indexPath.row]
             
-            if let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DayViewController") as? DayViewController {
-                
-                vc.eventRange = range
-                
-                navigationController?.pushViewController(vc, animated: true)
+            if range.type == .day {
+                if let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DayViewController") as? DayViewController {
+                    
+                    vc.eventRange = range
+                    
+                    navigationController?.pushViewController(vc, animated: true)
+                }
+            } else if range.type == .month {
+                if let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "ViewController") as? ViewController {
+                    
+                    vc.eventRange = range
+                    
+                    navigationController?.pushViewController(vc, animated: true)
+                }
+            } else {
+                if let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "ViewController") as? ViewController {
+                    
+                    vc.eventRange = range
+                    
+                    navigationController?.pushViewController(vc, animated: true)
+                }
             }
+            
+            
         }
     }
     
@@ -480,9 +757,22 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     @IBAction func userPressedAddButton(_ sender: UIButton) {
-        self.presentInputView(type: ItemType.mood)
+        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+            
+            view.currentMode = .event
+            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+            view.modalPresentationCapturesStatusBarAppearance = true
+            view.delegate = self
+            
+            self.present(view, animated: true, completion: {
+                
+            })
+        }
     }
     
+    func userCreated(event: Event) {
+        self.reload()
+    }
 }
 
 
@@ -497,7 +787,6 @@ extension Date {
     }
     
     func lastMomentOfMonth() -> Date {
-        
         return Calendar.current.date(byAdding: DateComponents(month: 1, second: -1), to: self.firstDayOfMonth())!
     }
     
@@ -508,8 +797,6 @@ extension Date {
         components.setValue(1, for: .day)
         return calendar.date(from: components)!
     }
-    
-    
     
     var middleOfDay: Date {
         var components = DateComponents()

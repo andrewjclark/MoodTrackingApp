@@ -150,6 +150,24 @@ class DataStore {
         }
     }
     
+    func fetchEvents(startDate: Date, endDate: Date) -> [Event]? {
+        
+        let predicate = NSPredicate(format: "date >= %@ && date <= %@", startDate as NSDate, endDate as NSDate)
+        
+        let fetchRequest = eventFetchRequest(predicate)
+        
+        do {
+            let results = try self.persistentContainer.viewContext.fetch(fetchRequest)
+            
+            return results
+        } catch {
+            return nil
+        }
+        
+        
+        return nil
+    }
+    
     func deleteEvent(event: Event) {
         self.persistentContainer.viewContext.delete(event)
     }
@@ -276,7 +294,6 @@ class DataStore {
             
             if timeSince < Int.max {
                 bodyString += "\nYour last entry was \(timeString(seconds: timeSince + newTime)) ago."
-                print("bodyString: \(bodyString)")
             }
             
             content.body = bodyString

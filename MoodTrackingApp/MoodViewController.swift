@@ -25,15 +25,18 @@ class MoodViewController:UIViewController {
     }
     
     func presentInputView(type: ItemType) {
-        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
-            
-            view.currentMode = type
-            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
-            view.modalPresentationCapturesStatusBarAppearance = true
-            
-            self.present(view, animated: true, completion: {
+        
+        DispatchQueue.main.async {
+            if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
                 
-            })
+                view.currentMode = type
+                view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+                view.modalPresentationCapturesStatusBarAppearance = true
+                
+                self.present(view, animated: true, completion: {
+                    
+                })
+            }
         }
     }
 }

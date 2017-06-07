@@ -8,12 +8,15 @@
 
 import UIKit
 
+class GraphItem {
+    var emoji:String = ""
+    var value:Float = 0 // Can be between -1 and 1
+    var label:String = ""
+}
+
 class GraphView:UIView {
     
-    var results = [Float]() // Values between 0 and 1
-    var dist = [Float]() // Values between 0 and 1
-    var labelText = [String]() // If this string contains a '*' then we should put a gray circle behind it
-    var timeText = [String]() // If this string is not empty it will be written underneath the result, centered.
+    var items = [GraphItem]()
     
     var labels = [UILabel]() // Labels that show the happy/sad symbols
     
@@ -22,34 +25,51 @@ class GraphView:UIView {
         super.draw(rect)
         
         if let context = UIGraphicsGetCurrentContext() {
+            
+            // Draw the mid line
+            if items.count > 0 {
+                let guide1XPos = xPos(x: 0.0)
+                let guide1YPos = yPos(scale: 0.5)
+                
+                let guide2XPos = xPos(x: 1.0)
+                let guide2YPos = yPos(scale: 0.5)
+                
+                context.setStrokeColor(UIColor.white.withAlphaComponent(0.5).cgColor)
+                context.setLineWidth(1)
+                
+                context.move(to: CGPoint(x: guide1XPos, y: guide1YPos))
+                
+                context.addLine(to: CGPoint(x: guide2XPos, y: guide2YPos))
+                
+                context.strokePath()
+            }
+            
             context.setStrokeColor(UIColor.white.cgColor)
-            context.setLineWidth(4)
+            context.setLineWidth(3)
             
             // Get the max time and min time
             var count = 0
             
-            // let width:CGFloat = self.bounds.width / CGFloat(results.count - 1)
-            
-            if results.count > 1 {
-                for result in results {
+            if items.count > 1 {
+                for item in items {
                     
                     if count == 0 {
-                        //let xPos:CGFloat = ((CGFloat(dist[count]) * 0.8) + 0.1) * self.bounds.width
-                        let xPos:CGFloat = self.xPos(dist: dist[count])
-                        //let yPos:CGFloat = (((CGFloat(result) * 0.8) + 0.1) * self.bounds.height)
-                        let yPos:CGFloat = self.yPos(scale: result)
+                        
+                        let xPos:CGFloat = self.xPos(index: count)
+                        
+                        let yPos:CGFloat = self.yPos(scale: item.value)
                         
                         context.move(to: CGPoint(x: xPos, y: yPos))
-                    } else if count < results.count {
+                    } else if count < items.count {
                         
-                        let lastResult = results[count - 1]
-                        let lastXPos:CGFloat = self.xPos(dist: dist[count - 1])
-                        let lastYPos:CGFloat = self.yPos(scale: lastResult)
+                        let lastResult = items[count - 1]
+                        let lastXPos:CGFloat = self.xPos(index: count - 1)
+                        let lastYPos:CGFloat = self.yPos(scale: lastResult.value)
                         
                         let lastLinePoint = CGPoint(x: lastXPos, y: lastYPos)
                         
-                        let xPos:CGFloat = self.xPos(dist: dist[count])
-                        let yPos:CGFloat = self.yPos(scale: result)
+                        let xPos:CGFloat = self.xPos(index: count)
+                        let yPos:CGFloat = self.yPos(scale: item.value)
                         
                         let newPoint = CGPoint(x: xPos, y: yPos)
                         let diffWidth:CGFloat = 0
@@ -60,8 +80,8 @@ class GraphView:UIView {
                         context.addCurve(to: newPoint, control1: control1, control2: control2)
                         
                     } else {
-                        let xPos:CGFloat = self.xPos(dist: dist[count])
-                        let yPos:CGFloat = self.yPos(scale: result)
+                        let xPos:CGFloat = self.xPos(index: count)
+                        let yPos:CGFloat = self.yPos(scale: item.value)
                         
                         context.addLine(to: CGPoint(x: xPos, y: yPos))
                     }
@@ -71,50 +91,31 @@ class GraphView:UIView {
             }
             
             context.strokePath()
-            
-            /*
-             // Draw circle behind
-            context.setFillColor(UIColor.moodBlue.cgColor)
-            
-            count = 0
-            
-            for result in results {
-                
-                var circleRadius:CGFloat = 0
-                
-                let label = labelText[count]
-                
-                if label.contains("*") {
-                    circleRadius = 14
-                }
-                
-                let xPos:CGFloat = self.xPos(dist: dist[count])
-                let yPos:CGFloat = self.yPos(scale: result)
-                
-                let rect = CGRect(x: xPos - circleRadius, y: yPos - circleRadius, width: circleRadius * 2, height: circleRadius * 2)
-                
-                context.fillEllipse(in: rect)
-                count += 1
-            }
-             */
         }
     }
     
-    func xPos(dist: Float) -> CGFloat {
-        let xPos:CGFloat = ((CGFloat(dist) * 0.9) + 0.05) * self.bounds.width
-        return xPos
+    func xPos(index: Int) -> CGFloat {
+        var x:CGFloat = 0.0
+        
+        if items.count >= 2 {
+            // Determine the x pos
+            return xPos(x: CGFloat(index) /  CGFloat(items.count - 1))
+        } else {
+            return xPos(x: 0.5)
+        }
+    }
+    
+    func xPos(x: CGFloat) -> CGFloat {
+        return ((x * 0.9) + 0.05) * self.bounds.width
     }
     
     func yPos(scale: Float) -> CGFloat {
-        let yPos:CGFloat = ((CGFloat(scale) * 0.8) + 0.1) * self.bounds.height
+        let yPos:CGFloat = ((CGFloat(scale) * 0.7) + 0.1) * self.bounds.height
         return yPos
     }
     
-    func updateLabels(results: [Float], dist: [Float], labels: [String], timeLabels: [String]) {
-        self.results = results
-        self.dist = dist
-        self.labelText = labels
-        self.timeText = timeLabels
+    func updateLabel(items: [GraphItem]) {
+        self.items = items
         
         self.setNeedsDisplay()
         
@@ -129,14 +130,14 @@ class GraphView:UIView {
         
         var count = 0
         
-        for result in results {
+        for item in items {
             
-            let xPos:CGFloat = self.xPos(dist: dist[count])
-            let yPos:CGFloat = self.yPos(scale: result)
+            let xPos:CGFloat = self.xPos(index: count)
+            let yPos:CGFloat = self.yPos(scale: item.value)
             
             let label = UILabel()
             
-            let emoji = labelText[count].replacingOccurrences(of: "*", with: "")
+            let emoji = item.emoji.replacingOccurrences(of: "*", with: "")
             
             let font = UIFont.systemFont(ofSize: 26.0)
             
@@ -155,30 +156,30 @@ class GraphView:UIView {
             
             labels.append(label)
             
-            if timeText.count > count {
-                let string = timeText[count]
-                
-                // Add time text
-                
-                let timeFont = UIFont.systemFont(ofSize: 12.0)
-                
-                let timeLabel = UILabel()
-                timeLabel.textColor = UIColor.white
-                timeLabel.text = string
-                timeLabel.font = timeFont
-                timeLabel.textAlignment = NSTextAlignment.center
-                
-                let attrString = NSAttributedString(string: string, attributes: [NSFontAttributeName:timeFont])
-                
-                let textSize = attrString.boundingRect(with: CGSize(width: 1000, height: 1000), options: NSStringDrawingOptions.usesLineFragmentOrigin, context: nil)
-                
-                let newRect = CGRect(x: xPos - (textSize.width / 2) + 1, y: self.frame.height - textSize.height + 2, width: textSize.width, height: textSize.height)
-                
-                timeLabel.frame = newRect
-                
-                self.addSubview(timeLabel)
-                labels.append(timeLabel)
-            }
+            let string = item.label
+            
+            // Add time text
+            
+            let timeFont = UIFont.systemFont(ofSize: 12.0)
+            
+            let timeLabel = UILabel()
+            timeLabel.textColor = UIColor.white
+            timeLabel.text = string
+            timeLabel.font = timeFont
+            timeLabel.textAlignment = NSTextAlignment.center
+            
+            let labelAttrString = NSAttributedString(string: string, attributes: [NSFontAttributeName:timeFont])
+            
+            let textSize = labelAttrString.boundingRect(with: CGSize(width: 1000, height: 1000), options: NSStringDrawingOptions.usesLineFragmentOrigin, context: nil)
+            
+            let newRect = CGRect(x: xPos - (textSize.width / 2) + 1, y: self.frame.height - textSize.height + 2, width: textSize.width, height: textSize.height)
+            
+            timeLabel.frame = newRect
+            
+            self.addSubview(timeLabel)
+            labels.append(timeLabel)
+
+            
             
             count += 1
         }

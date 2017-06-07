@@ -23,9 +23,6 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     
-    //@IBOutlet weak var collectionView: UICollectionView!
-    
-    //var currentItems = [CircleItem]()
     var currentItem:CircleItem?
     
     var currentIndexPath:IndexPath?
@@ -41,8 +38,11 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         updateCircleView()
         updateView()
         
-        self.view.backgroundColor = UIColor.clear
+        if currentMode == .event {
+            segmentedControl.selectedSegmentIndex = 1
+        }
         
+        self.view.backgroundColor = UIColor.clear
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -85,8 +85,6 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             emoji = bundle.emoji
             name = bundle.name.capitalized
         }
-        
-        print("emoji: \(emoji)")
         
         let emojiFont = UIFont.systemFont(ofSize: 40)
         let nameFont = UIFont.systemFont(ofSize: 20)
@@ -246,7 +244,7 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
             // This range represents a previous range. Get the last event and add 15 minutes.
             
-            if let event = range.events.last {
+            if let event = range.events.first {
                 if let date = event.date {
                     return (date as Date).addMinutes(offset: 15)
                 }
@@ -267,16 +265,20 @@ class CircleViewController:UIViewController, CircleViewDelegate {
                 // Event
                 if let eventType = EventType(rawValue: item.itemType) {
                     if let event = DataStore.shared.newEvent(type: eventType, customEmoji: nil, note: nil, date: newEventDate()) {
-                        print("Event made")
-                        delegate?.userCreated(event: event)
+                        
+                        if let delegate = delegate {
+                            delegate.userCreated(event: event)
+                        }
                     }
                 }
             } else {
                 // Mood
                 if let moodType = EventType(rawValue: item.itemType) {
                     if let event = DataStore.shared.newMood(type: moodType, customEmoji: nil, note: nil, date: newEventDate()) {
-                        print("Mood made")
-                        delegate?.userCreated(event: event)
+                        
+                        if let delegate = delegate {
+                            delegate.userCreated(event: event)
+                        }
                     }
                 }
             }
