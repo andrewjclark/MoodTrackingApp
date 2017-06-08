@@ -110,6 +110,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         let deleteAction = UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Delete") { (action, indexPath) in
             if let event = self.event(indexPath: indexPath) {
                 DataStore.shared.deleteEvent(event: event)
+                DataStore.shared.saveContext()
                 
                 self.eventRange.events.remove(at: self.eventRange.events.count - 1 - indexPath.row)
                 

@@ -759,7 +759,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     @IBAction func userPressedAddButton(_ sender: UIButton) {
         if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
             
-            view.currentMode = .event
+            view.currentMode = .mood
             view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
             view.modalPresentationCapturesStatusBarAppearance = true
             view.delegate = self

@@ -21,6 +21,8 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     @IBOutlet weak var mainLabel: UILabel!
     
+    @IBOutlet weak var emojiLabel: UILabel!
+    
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     
     var currentItem:CircleItem?
@@ -31,16 +33,40 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     @IBOutlet weak var saveButton: UIButton!
     
+    @IBOutlet weak var mainView: UIView!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if currentMode == .event {
+            // Event
+            let bundle = DataFormatter.emoji(typeInt: EventType.wastedtime.rawValue)
+            
+            let newCircleItem = CircleItem()
+            newCircleItem.emoji = bundle.emoji
+            newCircleItem.type = ItemType.event
+            newCircleItem.itemType = EventType.wastedtime.rawValue
+            
+            currentItem = newCircleItem
+            
+            segmentedControl.selectedSegmentIndex = 1
+        } else {
+            // Mood
+            
+            let bundle = DataFormatter.emoji(typeInt: EventType.neutral.rawValue)
+            
+            let newCircleItem = CircleItem()
+            newCircleItem.emoji = bundle.emoji
+            newCircleItem.type = ItemType.mood
+            newCircleItem.itemType = EventType.neutral.rawValue
+            
+            currentItem = newCircleItem
+        }
         
         circleView.delegate = self
         updateCircleView()
         updateView()
-        
-        if currentMode == .event {
-            segmentedControl.selectedSegmentIndex = 1
-        }
         
         self.view.backgroundColor = UIColor.clear
     }
@@ -90,14 +116,13 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         let nameFont = UIFont.systemFont(ofSize: 20)
         let divideFont = UIFont.systemFont(ofSize: 10)
         
-        var attrString = NSMutableAttributedString(string: emoji, attributes: [NSFontAttributeName: emojiFont])
-        
-        attrString.append(NSAttributedString(string: "\n", attributes: [NSFontAttributeName : divideFont]))
-        
-        attrString.append(NSAttributedString(string: "\n\(name)", attributes: [NSFontAttributeName : nameFont, NSForegroundColorAttributeName: UIColor.white]))
-        
         self.mainLabel.backgroundColor = UIColor.clear
-        self.mainLabel.attributedText = attrString
+        self.mainLabel.text = name
+        self.mainLabel.font = nameFont
+        
+        self.emojiLabel.backgroundColor = UIColor.clear
+        self.emojiLabel.text = emoji
+        self.emojiLabel.font = emojiFont
         
         if currentMode == .mood {
             segmentedControl.selectedSegmentIndex = 0
@@ -290,13 +315,17 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             UIView.animate(withDuration: 0.25, delay: 0.0, options: UIViewAnimationOptions.curveEaseIn, animations: {
                 
                 self.mainLabel.frame.origin.y -= 100
+                self.emojiLabel.frame.origin.y -= 100
                 self.mainLabel.alpha = 0.0
+                self.emojiLabel.alpha = 0.0
                 self.saveButton.alpha = 0.0
                 
             }, completion: { (complete) in
                 self.mainLabel.text = nil
                 self.mainLabel.frame.origin.y += 100
+                self.emojiLabel.frame.origin.y += 100
                 self.mainLabel.alpha = 1.0
+                self.emojiLabel.alpha = 1.0
                 self.saveButton.alpha = 1.0
                 
                 self.updateView()
@@ -311,6 +340,26 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
         }
     }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return UIStatusBarStyle.lightContent
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        if let touch = touches.first {
+            let location = touch.location(in: self.view)
+            
+            if location.y < (self.view.frame.height - mainView.frame.height) {
+                self.dismiss(animated: true, completion: { 
+                    
+                })
+            }
+        }
+        
+    }
+    
 }
 
 class CircleItem:CustomStringConvertible {
