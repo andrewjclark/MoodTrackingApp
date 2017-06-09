@@ -8,12 +8,18 @@
 
 import UIKit
 
-class GraphEvent {
+class GraphEvent:Equatable {
     var emoji = ""
-    var linearMood:Float = 0
+    var linearMood:Float?
     var date = Date()
     var type = ItemType.mood
 }
+
+func ==(lhs: GraphEvent, rhs: GraphEvent) -> Bool {
+    return lhs.linearMood == rhs.linearMood && lhs.emoji == rhs.emoji && lhs.date == rhs.date
+}
+
+
 
 public enum DisplayFormat {
     case time
@@ -62,6 +68,20 @@ class EventGraphTableViewCell:UITableViewCell {
         
         DispatchQueue.main.async { [weak self] in
             self?.drawLine()
+        }
+    }
+    
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        setSelected(highlighted, animated: animated)
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        if selected {
+            mainView.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+            graphView.backgroundColor = UIColor.clear
+        } else {
+            mainView.backgroundColor = UIColor.clear
+            graphView.backgroundColor = UIColor.clear
         }
     }
     
@@ -243,14 +263,23 @@ class EventGraphTableViewCell:UITableViewCell {
         
         let df = DateFormatter()
         var capitaliseDate = false
+        var dateNeedsEndingLetters = false
         
         if displayFormat == .time {
             df.dateFormat = "h a"
         } else if displayFormat == .weekday {
             df.dateFormat = "EEE d"
             capitaliseDate = true
-        } else {
-            df.dateFormat = "d"
+        } else if displayFormat == .day {
+            
+            if type == .month {
+                df.dateFormat = "d"
+                dateNeedsEndingLetters = true
+            } else {
+                df.dateFormat = "MMM d"
+                dateNeedsEndingLetters = false
+                capitaliseDate = true
+            }
         }
         
         if newEvents.count > 0 {
@@ -264,6 +293,9 @@ class EventGraphTableViewCell:UITableViewCell {
             }
             
             var lastTimeLabel = ""
+            var lastEmojiLabel = ""
+            
+            
             
             for result in newEvents {
                 
@@ -271,22 +303,80 @@ class EventGraphTableViewCell:UITableViewCell {
                 
                 if result.type == .event {
                     // Event
-                    //let eventEmoji = DataFormatter.emoji(typeInt: Int(result.type))
-                    
                     newGraphItem.emoji = result.emoji
+                    
+                    lastEmojiLabel = result.emoji
+                    
                     newGraphItem.value = lastResult
                     
                 } else {
                     // Mood
                     
-                    //let moodEmoji = DataFormatter.moodEmoji(typeInt: Int(result.type))
+                    var shouldShowEmoji = false
                     
-                    newGraphItem.emoji = result.emoji
+                    if newEvents.count > 7 {
+                        
+                        // Only log changes in direction...
+                        
+                        if result != newEvents.first && result != newEvents.last {
+                            // We are somewhere in the middle
+                            
+                            if let index = newEvents.index(of: result) {
+                                let previousEvent = newEvents[index-1]
+                                let nextEvent = newEvents[index+1]
+                                
+                                // Now, look at these events...
+                                // If the prev is smaller than current and next is also smaller then we have changed direction
+                                
+                                if let currentValue = result.linearMood, let prevValue = previousEvent.linearMood, let nextValue = nextEvent.linearMood {
+                                    
+                                    if prevValue <= currentValue && nextValue < currentValue {
+                                        // Changed direction!
+                                        shouldShowEmoji = true
+                                    } else if prevValue >= currentValue && nextValue > currentValue {
+                                        // Changed direction!
+                                        shouldShowEmoji = true
+                                    }
+                                    
+                                } else {
+                                    shouldShowEmoji = true
+                                }
+                            }
+                        } else {
+                            // We are the first or last. Show em
+                            shouldShowEmoji = true
+                        }
+                        
+                        /*
+                         // Conditionally set the emoji
+                         if lastEmojiLabel != result.emoji {
+                         shouldShowEmoji = true
+                         newGraphItem.emoji = result.emoji
+                         } else if result == newEvents.last {
+                         shouldShowEmoji = true
+                         }
+                         */
+                        
+                    } else {
+                        // Always set the emoji
+                        shouldShowEmoji = true
+                    }
                     
-                    let scale = (result.linearMood - 1) / -2
-                    newGraphItem.value = Float(scale)
+                    if shouldShowEmoji {
+                        newGraphItem.emoji = result.emoji
+                    }
                     
-                    lastResult = scale
+                    lastEmojiLabel = result.emoji
+                    
+                    // newGraphItem.emoji = result.emoji
+                    
+                    if let linearMood = result.linearMood {
+                        let scale = (linearMood - 1) / -2
+                        newGraphItem.value = Float(scale)
+                        lastResult = scale
+                    } else {
+                        newGraphItem.value = lastResult
+                    }
                 }
                 
                 var newTimeLabel = ""
@@ -297,6 +387,10 @@ class EventGraphTableViewCell:UITableViewCell {
                     // If the last time label is the same then don't show it
                     let date = result.date
                     newTimeLabel = df.string(from: date as Date)
+                    
+                    if dateNeedsEndingLetters {
+                        newTimeLabel += DataFormatter.integerEndingLetters(string: newTimeLabel)
+                    }
                     
                     if newTimeLabel == lastTimeLabel && count != rawEvents.count - 1 {
                         newTimeLabel = ""

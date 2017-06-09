@@ -19,6 +19,10 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     @IBOutlet weak var circleView: CircleView!
     
+    @IBOutlet weak var bottomLeftCircleView: CircleView!
+    
+    @IBOutlet weak var bottomRightCircleView: CircleView!
+    
     @IBOutlet weak var mainLabel: UILabel!
     
     @IBOutlet weak var emojiLabel: UILabel!
@@ -64,16 +68,30 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             currentItem = newCircleItem
         }
         
+        // Circle View delegates
+        
         circleView.delegate = self
+        bottomLeftCircleView.delegate = self
+        bottomRightCircleView.delegate = self
+        
         updateCircleView()
         updateView()
         
         self.view.backgroundColor = UIColor.clear
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        updateCircleView()
+        updateView()
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
+        
+        updateCircleView()
+        updateView()
     }
     
     override func viewDidLayoutSubviews() {
@@ -96,6 +114,7 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         }
         
         self.updateView()
+        self.updateCircleView()
     }
     
     
@@ -175,6 +194,43 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             }
             
             circleView.dataSet = newDataSet
+            
+            
+            // Bottom Left
+            
+            let bottomLeftBundle = DataFormatter.emoji(typeInt: EventType.inspired.rawValue)
+            
+            let bottomLeftItem = CircleItem()
+            bottomLeftItem.emoji = bottomLeftBundle.emoji
+            bottomLeftItem.type = ItemType.mood
+            bottomLeftItem.itemType = EventType.inspired.rawValue
+            
+            if let currentItem = currentItem {
+                bottomLeftCircleView.selectedItem = indexPath(dataSet: [[bottomLeftItem]], selectedItem: currentItem)
+            } else {
+                bottomLeftCircleView.selectedItem = nil
+            }
+            
+            bottomLeftCircleView.dataSet = [[bottomLeftItem]]
+            
+            // Bottom Right
+            
+            let bottomRightBundle = DataFormatter.emoji(typeInt: EventType.sick.rawValue)
+            
+            let bottomRightItem = CircleItem()
+            bottomRightItem.emoji = bottomRightBundle.emoji
+            bottomRightItem.type = ItemType.mood
+            bottomRightItem.itemType = EventType.sick.rawValue
+            
+            if let currentItem = currentItem {
+                bottomRightCircleView.selectedItem = indexPath(dataSet: [[bottomRightItem]], selectedItem: currentItem)
+            } else {
+                bottomRightCircleView.selectedItem = nil
+            }
+            
+            bottomRightCircleView.dataSet = [[bottomRightItem]]
+            
+            
         } else {
             // Events
             
@@ -203,12 +259,45 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
             if let currentItem = currentItem {
                 circleView.selectedItem = indexPath(dataSet: newDataSet, selectedItem: currentItem)
-                
             } else {
                 circleView.selectedItem = nil
             }
             
             circleView.dataSet = newDataSet
+            
+            // Bottom Left
+            
+            let bottomLeftBundle = DataFormatter.emoji(typeInt: EventType.tragedy.rawValue)
+            
+            let bottomLeftItem = CircleItem()
+            bottomLeftItem.emoji = bottomLeftBundle.emoji
+            bottomLeftItem.type = ItemType.event
+            bottomLeftItem.itemType = EventType.tragedy.rawValue
+            
+            if let currentItem = currentItem {
+                bottomLeftCircleView.selectedItem = indexPath(dataSet: [[bottomLeftItem]], selectedItem: currentItem)
+            } else {
+                bottomLeftCircleView.selectedItem = nil
+            }
+            
+            bottomLeftCircleView.dataSet = [[bottomLeftItem]]
+            
+            // Bottom Right
+            
+            let bottomRightBundle = DataFormatter.emoji(typeInt: EventType.period.rawValue)
+            
+            let bottomRightItem = CircleItem()
+            bottomRightItem.emoji = bottomRightBundle.emoji
+            bottomRightItem.type = ItemType.mood
+            bottomRightItem.itemType = EventType.period.rawValue
+            
+            if let currentItem = currentItem {
+                bottomRightCircleView.selectedItem = indexPath(dataSet: [[bottomRightItem]], selectedItem: currentItem)
+            } else {
+                bottomRightCircleView.selectedItem = nil
+            }
+            
+            bottomRightCircleView.dataSet = [[bottomRightItem]]
         }
         
         if currentMode == .mood {
@@ -216,6 +305,17 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         } else {
             segmentedControl.selectedSegmentIndex = 1
         }
+        
+        
+        
+        
+        
+        
+        bottomLeftCircleView.setNeedsDisplay()
+        bottomLeftCircleView.drawEmoji()
+        
+        bottomRightCircleView.setNeedsDisplay()
+        bottomRightCircleView.drawEmoji()
         
         circleView.setNeedsDisplay()
         circleView.drawEmoji()
@@ -261,6 +361,16 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         if let range = eventRange {
             
             let rangeStartDate = range.startDate
+            
+            
+            if let event = range.events.first {
+                if let date = event.date {
+                    if date as Date > Date() {
+                        // The last date for this event is in the future?! Add 1 min to it
+                        return (date as Date).addMinutes(offset: 1)
+                    }
+                }
+            }
             
             if rangeStartDate.startOfDay == Date().startOfDay {
                 // This is todays date! Try and post it now.
@@ -357,7 +467,6 @@ class CircleViewController:UIViewController, CircleViewDelegate {
                 })
             }
         }
-        
     }
     
 }

@@ -178,8 +178,6 @@ class GraphView:UIView {
             
             self.addSubview(timeLabel)
             labels.append(timeLabel)
-
-            
             
             count += 1
         }

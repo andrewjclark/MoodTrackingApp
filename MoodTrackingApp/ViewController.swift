@@ -186,15 +186,17 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         // Setup the eventrange
         if eventRange == nil {
             self.summaryRange = GroupType.summary
+            
+            navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "66_Gear"), style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedSettings))
         }
-        
         
         updateTitle()
         
-        
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedBack))
+    }
+    
+    func userPressedSettings() {
         
-        // navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Reload", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedReload))
     }
     
     func userTappedTitle() {
@@ -456,8 +458,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 
                 while currentDate < endDate && currentDate < Date()  {
                     
-                    print("currentDate: \(currentDate)")
-                    
                     let newRange = EventRange()
                     newRange.startDate = currentDate
                     newRange.endDate = currentDate.endOfDay
@@ -477,8 +477,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             } else if type == .month {
                 
                 while currentDate < endDate && currentDate < Date()  {
-                    
-                    print("currentDate: \(currentDate)")
                     
                     let newRange = EventRange()
                     newRange.startDate = currentDate

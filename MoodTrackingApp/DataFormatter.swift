@@ -40,6 +40,8 @@ public enum EventType: Int {
     case tired = 42
     case inspired = 43
     
+    
+    
     case unknownevent = 1000
     
     // Wasted Time
@@ -84,7 +86,7 @@ public enum EventType: Int {
     // Misc
     case period = 1080
     case medication = 1081 // medication
-    
+    case tragedy = 1082
 }
 
 
@@ -177,7 +179,7 @@ class DataFormatter {
         case .media:
             return("📺", "media", ["tv", "film", "cinema", "movie", "tv series", "youtube", "webseries", "netflix", "hulu", "documentary", "comedy", "drama", "romance", "action"])
         case .period:
-            return("⭕️", "period (ended)", ["period", "cycle", "ended", "finished"])
+            return("🚫", "period", ["period", "cycle", "ended", "finished"])
         case .spiritual:
             return("⛪️", "spiritual", ["yoga", "meditated", "meditation"])
         case .study:
@@ -198,6 +200,8 @@ class DataFormatter {
             return("🗺", "adventure", ["adventure", "exploring", "explored", "wandered", "wander", "explore"])
         case .wastedtime:
             return("📱", "wasted time", ["waste time", "played on phone", "dawdled", "nothing", "bored"])
+        case .tragedy:
+            return("💔", "tragedy", ["break up", "death", "argument"])
         default:
             return("❓", "unknown", [String]())
         }
@@ -240,7 +244,7 @@ class DataFormatter {
         case .menstrual:
             return("🤒", "menstrual", -1.0, 0.0)
         case .sick:
-            return("🤒", "sick", -1.0, 0.0)
+            return("🤒", "sick", -0.5, 0.0)
         case .tired:
             return("😴", "tired", 0.0, 0.0)
         default:
@@ -255,5 +259,24 @@ class DataFormatter {
         dateFormatter.timeStyle = DateFormatter.Style.short
         
         return dateFormatter.string(from: date as Date)
+    }
+    
+    class func integerEndingLetters(string: String) -> String {
+        
+        if string == "11" || string == "12" || string == "13" {
+            return "th"
+        }
+        
+        if let last = string.characters.last {
+            if last == "1" {
+                return "st"
+            } else if last == "2" {
+                return "nd"
+            } else if last == "3" {
+                return "rd"
+            }
+        }
+        
+        return "th"
     }
 }
