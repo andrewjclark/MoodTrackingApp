@@ -8,7 +8,7 @@
 
 import UIKit
 
-class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource, CircleViewControllerDelegate, DatePickerViewControllerDelegate {
+class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource, DatePickerViewControllerDelegate {
     
     var eventRange = EventRange()
     
@@ -114,11 +114,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         
         let event = eventRange.events[sourceIndexPath.row]
         
-        
         // Remove the event at this index from eventRange, put it in the new position, then rectify the times
-        
-        
-        //print("movedEvent: \(movedEvent)")
         
         var eventAbove:Event?
         var eventBelow:Event?
@@ -252,18 +248,21 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         tableView.deselectRow(at: indexPath, animated: true)
         
         if indexPath.section == kSectionAddNew {
-            if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
-                
-                view.currentMode = .mood
-                view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
-                view.modalPresentationCapturesStatusBarAppearance = true
-                view.delegate = self
-                view.eventRange = self.eventRange
-                
-                self.present(view, animated: true, completion: {
-                    
-                })
-            }
+            
+            self.presentInputView(type: ItemType.mood)
+            
+//            if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+//                
+//                view.currentMode = .mood
+//                view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+//                view.modalPresentationCapturesStatusBarAppearance = true
+//                view.delegate = self
+//                view.eventRange = self.eventRange
+//                
+//                self.present(view, animated: true, completion: {
+//                    
+//                })
+//            }
         } else {
             // Show date picker.
             if let event = event(indexPath: indexPath) {
@@ -294,7 +293,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         }
     }
     
-    func userCreated(event: Event) {
+    override func userCreated(event: Event) {
         eventRange.performFetch()
         self.tableView.reloadData()
     }

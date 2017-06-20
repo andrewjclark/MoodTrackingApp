@@ -23,6 +23,10 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     @IBOutlet weak var bottomRightCircleView: CircleView!
     
+    @IBOutlet weak var topLeftCircleView: CircleView!
+    
+    @IBOutlet weak var topRightCircleView: CircleView!
+    
     @IBOutlet weak var mainLabel: UILabel!
     
     @IBOutlet weak var emojiLabel: UILabel!
@@ -34,6 +38,8 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     var currentIndexPath:IndexPath?
     
     var currentMode = ItemType.mood
+    
+    var circleItemSetup = false
     
     @IBOutlet weak var saveButton: UIButton!
     
@@ -73,6 +79,15 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         circleView.delegate = self
         bottomLeftCircleView.delegate = self
         bottomRightCircleView.delegate = self
+        topLeftCircleView.delegate = self
+        topRightCircleView.delegate = self
+        
+        
+        circleView.isUserInteractionEnabled = false
+        bottomLeftCircleView.isUserInteractionEnabled = false
+        bottomRightCircleView.isUserInteractionEnabled = false
+        topLeftCircleView.isUserInteractionEnabled = false
+        topRightCircleView.isUserInteractionEnabled = false
         
         updateCircleView()
         updateView()
@@ -109,12 +124,32 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     
     func userSelected(indexPath: IndexPath?, item: CircleItem?) {
         
+        var previousType = 0
+        var newType = 0
+        
+        if let currentItem = currentItem {
+            previousType = currentItem.itemType
+        }
+        
         if let item = item {
             currentItem = item
+            newType = item.itemType
+            
+            print("previousType: \(previousType)")
+            print("newType: \(newType)")
+            print("")
+            
+            if previousType != newType {
+                playSelectSound()
+            }
         }
         
         self.updateView()
         self.updateCircleView()
+    }
+    
+    func playSelectSound() {
+        SoundManager.sharedStore.playSound(sound: SoundType.click)
     }
     
     
@@ -133,7 +168,6 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         
         let emojiFont = UIFont.systemFont(ofSize: 40)
         let nameFont = UIFont.systemFont(ofSize: 20)
-        let divideFont = UIFont.systemFont(ofSize: 10)
         
         self.mainLabel.backgroundColor = UIColor.clear
         self.mainLabel.text = name
@@ -153,151 +187,88 @@ class CircleViewController:UIViewController, CircleViewDelegate {
     }
     
     func updateSaveButton() {
-        if let currentItem = currentItem {
+        if let _ = currentItem {
             self.saveButton.isHidden = false
         } else {
             self.saveButton.isHidden = true
         }
     }
     
-    func updateCircleView() {
-        // Mood Set
-        if (self.currentMode == ItemType.mood) {
-            let dataSet = [[EventType.neutral.rawValue],[EventType.calm.rawValue, EventType.nervous.rawValue, EventType.down.rawValue],[EventType.happy.rawValue, EventType.excited.rawValue, EventType.anxious.rawValue, EventType.angry.rawValue, EventType.sad.rawValue, EventType.depressed.rawValue]]
+    func setupCircle(circleView: CircleView, items:[[Int]]) {
+        
+        let dataSet = items
+        
+        var newDataSet = [[CircleItem]]()
+        
+        for section in dataSet {
             
-            var newDataSet = [[CircleItem]]()
+            var items = [CircleItem]()
             
-            for section in dataSet {
+            for item in section {
                 
-                var items = [CircleItem]()
+                let bundle = DataFormatter.emoji(typeInt: item)
                 
-                for item in section {
-                    
-                    let bundle = DataFormatter.emoji(typeInt: item)
-                    
-                    let newCircleItem = CircleItem()
-                    newCircleItem.emoji = bundle.emoji
-                    newCircleItem.type = ItemType.mood
-                    newCircleItem.itemType = item
-                    
-                    items.append(newCircleItem)
-                }
+                let newCircleItem = CircleItem()
+                newCircleItem.emoji = bundle.emoji
                 
-                newDataSet.append(items)
-            }
-            
-            
-            if let currentItem = currentItem {
-                circleView.selectedItem = indexPath(dataSet: newDataSet, selectedItem: currentItem)
-            } else {
-                circleView.selectedItem = nil
-            }
-            
-            circleView.dataSet = newDataSet
-            
-            
-            // Bottom Left
-            
-            let bottomLeftBundle = DataFormatter.emoji(typeInt: EventType.inspired.rawValue)
-            
-            let bottomLeftItem = CircleItem()
-            bottomLeftItem.emoji = bottomLeftBundle.emoji
-            bottomLeftItem.type = ItemType.mood
-            bottomLeftItem.itemType = EventType.inspired.rawValue
-            
-            if let currentItem = currentItem {
-                bottomLeftCircleView.selectedItem = indexPath(dataSet: [[bottomLeftItem]], selectedItem: currentItem)
-            } else {
-                bottomLeftCircleView.selectedItem = nil
-            }
-            
-            bottomLeftCircleView.dataSet = [[bottomLeftItem]]
-            
-            // Bottom Right
-            
-            let bottomRightBundle = DataFormatter.emoji(typeInt: EventType.sick.rawValue)
-            
-            let bottomRightItem = CircleItem()
-            bottomRightItem.emoji = bottomRightBundle.emoji
-            bottomRightItem.type = ItemType.mood
-            bottomRightItem.itemType = EventType.sick.rawValue
-            
-            if let currentItem = currentItem {
-                bottomRightCircleView.selectedItem = indexPath(dataSet: [[bottomRightItem]], selectedItem: currentItem)
-            } else {
-                bottomRightCircleView.selectedItem = nil
-            }
-            
-            bottomRightCircleView.dataSet = [[bottomRightItem]]
-            
-            
-        } else {
-            // Events
-            
-            let dataSet = [[EventType.wastedtime.rawValue], [EventType.caffeine.rawValue, EventType.food_healthy.rawValue, EventType.study.rawValue, EventType.walk.rawValue, EventType.media.rawValue, EventType.social_friend.rawValue, EventType.date.rawValue], [EventType.alcohol.rawValue, EventType.food_junk.rawValue, EventType.work.rawValue, EventType.exercise.rawValue, EventType.adventure.rawValue, EventType.social_event.rawValue, EventType.sex.rawValue], [EventType.drugs.rawValue, EventType.food_sweet.rawValue, EventType.created.rawValue, EventType.spiritual.rawValue, EventType.travel.rawValue, EventType.social_party.rawValue, EventType.kink.rawValue]]
-            
-            var newDataSet = [[CircleItem]]()
-            
-            for section in dataSet {
-                
-                var items = [CircleItem]()
-                
-                for item in section {
-                    
-                    let bundle = DataFormatter.eventEmoji(typeInt: item)
-                    
-                    let newCircleItem = CircleItem()
-                    newCircleItem.emoji = bundle.emoji
+                if item >= 1000 {
                     newCircleItem.type = ItemType.event
-                    newCircleItem.itemType = item
-                    
-                    items.append(newCircleItem)
+                } else {
+                    newCircleItem.type = ItemType.mood
                 }
                 
-                newDataSet.append(items)
+                newCircleItem.itemType = item
+                
+                items.append(newCircleItem)
             }
             
-            if let currentItem = currentItem {
-                circleView.selectedItem = indexPath(dataSet: newDataSet, selectedItem: currentItem)
+            newDataSet.append(items)
+        }
+        
+        circleView.dataSet = newDataSet
+    }
+    
+    func updateCircleView() {
+        
+        if !circleItemSetup {
+            if (self.currentMode == ItemType.mood) {
+                // Moods
+                
+                setupCircle(circleView: circleView, items: [[EventType.neutral.rawValue],[EventType.calm.rawValue, EventType.nervous.rawValue, EventType.down.rawValue, EventType.bored.rawValue],[EventType.happy.rawValue, EventType.excited.rawValue, EventType.anxious.rawValue, EventType.angry.rawValue, EventType.sad.rawValue, EventType.depressed.rawValue, EventType.sick.rawValue, EventType.tired.rawValue]])
+                
+                //setupCircle(circleView: bottomLeftCircleView, items: [[EventType.inspired.rawValue]])
+                
+                //setupCircle(circleView: bottomRightCircleView, items: [[EventType.sick.rawValue]])
+                
+//                setupCircle(circleView: topLeftCircleView, items: [[EventType.tired.rawValue]])
+//                
+//                setupCircle(circleView: topRightCircleView, items: [[EventType.bored.rawValue]])
+                
+                bottomLeftCircleView.isHidden = true
+                bottomRightCircleView.isHidden = true
+                topLeftCircleView.isHidden = true
+                topRightCircleView.isHidden = true
+                
             } else {
-                circleView.selectedItem = nil
+                // Events
+                
+                setupCircle(circleView: circleView, items: [[EventType.wastedtime.rawValue], [EventType.caffeine.rawValue, EventType.food_healthy.rawValue, EventType.study.rawValue, EventType.walk.rawValue, EventType.media.rawValue, EventType.social_friend.rawValue, EventType.date.rawValue], [EventType.alcohol.rawValue, EventType.food_junk.rawValue, EventType.work.rawValue, EventType.exercise.rawValue, EventType.adventure.rawValue, EventType.social_event.rawValue, EventType.sex.rawValue], [EventType.medication.rawValue, EventType.food_sweet.rawValue, EventType.created.rawValue, EventType.spiritual.rawValue, EventType.travel.rawValue, EventType.social_party.rawValue, EventType.period.rawValue]])
+                
+                setupCircle(circleView: bottomLeftCircleView, items: [[EventType.tragedy.rawValue]])
+                
+                setupCircle(circleView: bottomRightCircleView, items: [[EventType.period.rawValue]])
+                
+                bottomLeftCircleView.isHidden = false
+                bottomRightCircleView.isHidden = true
+                topLeftCircleView.isHidden = true
+                topRightCircleView.isHidden = true
+                
+//                setupCircle(circleView: topLeftCircleView, items: [[EventType.medication.rawValue]])
+//                
+//                setupCircle(circleView: topRightCircleView, items: [[EventType.slept.rawValue]])
             }
             
-            circleView.dataSet = newDataSet
-            
-            // Bottom Left
-            
-            let bottomLeftBundle = DataFormatter.emoji(typeInt: EventType.tragedy.rawValue)
-            
-            let bottomLeftItem = CircleItem()
-            bottomLeftItem.emoji = bottomLeftBundle.emoji
-            bottomLeftItem.type = ItemType.event
-            bottomLeftItem.itemType = EventType.tragedy.rawValue
-            
-            if let currentItem = currentItem {
-                bottomLeftCircleView.selectedItem = indexPath(dataSet: [[bottomLeftItem]], selectedItem: currentItem)
-            } else {
-                bottomLeftCircleView.selectedItem = nil
-            }
-            
-            bottomLeftCircleView.dataSet = [[bottomLeftItem]]
-            
-            // Bottom Right
-            
-            let bottomRightBundle = DataFormatter.emoji(typeInt: EventType.period.rawValue)
-            
-            let bottomRightItem = CircleItem()
-            bottomRightItem.emoji = bottomRightBundle.emoji
-            bottomRightItem.type = ItemType.mood
-            bottomRightItem.itemType = EventType.period.rawValue
-            
-            if let currentItem = currentItem {
-                bottomRightCircleView.selectedItem = indexPath(dataSet: [[bottomRightItem]], selectedItem: currentItem)
-            } else {
-                bottomRightCircleView.selectedItem = nil
-            }
-            
-            bottomRightCircleView.dataSet = [[bottomRightItem]]
+            circleItemSetup = true
         }
         
         if currentMode == .mood {
@@ -306,19 +277,12 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             segmentedControl.selectedSegmentIndex = 1
         }
         
-        
-        
-        
-        
-        
-        bottomLeftCircleView.setNeedsDisplay()
-        bottomLeftCircleView.drawEmoji()
-        
-        bottomRightCircleView.setNeedsDisplay()
-        bottomRightCircleView.drawEmoji()
-        
-        circleView.setNeedsDisplay()
-        circleView.drawEmoji()
+        // Update the selected items
+        for theCircleView in [circleView, bottomLeftCircleView, bottomRightCircleView, topLeftCircleView, topRightCircleView] {
+            if let theCircleView = theCircleView {
+                theCircleView.setupSelectedItem(item: currentItem)
+            }
+        }
     }
     
     func indexPath(dataSet: [[CircleItem]], selectedItem: CircleItem) -> IndexPath? {
@@ -352,6 +316,8 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             self.currentMode = .event
         }
         
+        circleItemSetup = false
+        
         updateCircleView()
     }
     
@@ -362,11 +328,10 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
             let rangeStartDate = range.startDate
             
-            
             if let event = range.events.first {
                 if let date = event.date {
                     if date as Date > Date() {
-                        // The last date for this event is in the future?! Add 1 min to it
+                        // The last date for this event is in the future?! Add 1 min to it instead
                         return (date as Date).addMinutes(offset: 1)
                     }
                 }
@@ -381,6 +346,17 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
             if let event = range.events.first {
                 if let date = event.date {
+                    
+                    if (date as Date).addMinutes(offset: 1) >= (date as Date).endOfDay {
+                        // Adding 1 minute to this date would bring it into tomorrow, add 1 second instead.
+                        return (date as Date).addSeconds(offset: 1)
+                    }
+                    
+                    if (date as Date).addMinutes(offset: 15) >= (date as Date).endOfDay {
+                        // Adding 15 minutes to this date would bring it into tomorrow, add 1 minute instead.
+                        return (date as Date).addMinutes(offset: 1)
+                    }
+                    
                     return (date as Date).addMinutes(offset: 15)
                 }
             }
@@ -422,6 +398,8 @@ class CircleViewController:UIViewController, CircleViewDelegate {
             
             self.updateCircleView()
             
+            SoundManager.sharedStore.playSound(sound: SoundType.clear)
+            
             UIView.animate(withDuration: 0.25, delay: 0.0, options: UIViewAnimationOptions.curveEaseIn, animations: {
                 
                 self.mainLabel.frame.origin.y -= 100
@@ -459,12 +437,49 @@ class CircleViewController:UIViewController, CircleViewDelegate {
         super.touchesBegan(touches, with: event)
         
         if let touch = touches.first {
-            let location = touch.location(in: self.view)
+            processTouch(touch: touch, force: true)
+        }
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
+        
+        if let touch = touches.first {
+            processTouch(touch: touch, force: false)
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        if let touch = touches.first {
+            processTouch(touch: touch, force: true)
+        }
+    }
+    
+    func processTouch(touch: UITouch, force: Bool) {
+        let location = touch.location(in: self.view)
+        let previousLocation = touch.previousLocation(in: self.view)
+        
+        if location.y < (self.view.frame.height - mainView.frame.height) {
+            self.dismiss(animated: true, completion: {
+                
+            })
+        } else {
+            // Process this touch
             
-            if location.y < (self.view.frame.height - mainView.frame.height) {
-                self.dismiss(animated: true, completion: { 
+            if force || Int(location.x) != Int(previousLocation.x) || Int(location.y) != Int(previousLocation.y) {
+                
+                for theView in [circleView, topLeftCircleView, topRightCircleView, bottomLeftCircleView, bottomRightCircleView] {
                     
-                })
+                    if let theView = theView {
+                        let location = touch.location(in: mainView)
+                        
+                        if theView.frame.contains(location) {
+                            theView.processTouch(location: touch.location(in: theView))
+                        }
+                    }
+                }
             }
         }
     }

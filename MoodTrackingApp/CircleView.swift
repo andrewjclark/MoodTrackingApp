@@ -18,7 +18,7 @@ class CircleView:UIView {
     
     var dataSet = [[CircleItem]]()
     
-    var selectedItem:IndexPath?
+    private var selectedItem:IndexPath?
     
     let NoOfGlasses = 8
     let π:CGFloat = CGFloat(M_PI)
@@ -27,11 +27,46 @@ class CircleView:UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        self.setNeedsDisplay()
+        //self.setNeedsDisplay()
         self.backgroundColor = UIColor.clear
+        
+        self.drawEmoji()
     }
     
-    func drawSegment(row: Int, section: Int, numberOfSegments: Int, numberOfRings: Int, color: UIColor, context: CGContext, emoji: String) {
+    func setupSelectedItem(item:CircleItem?) {
+        if let item = item {
+            selectedItem = indexPathOfItem(circleItem: item)
+        } else {
+            selectedItem = nil
+        }
+        
+        // Time to update
+        self.setNeedsDisplay()
+        self.drawEmoji()
+    }
+    
+    func indexPathOfItem(circleItem: CircleItem) -> IndexPath? {
+        var sectionCount = 0
+        for section in dataSet {
+            
+            var itemCount = 0
+            
+            for item in section {
+                
+                if item.itemType == circleItem.itemType {
+                    return IndexPath(row: itemCount, section: sectionCount)
+                }
+                
+                itemCount += 1
+            }
+            
+            sectionCount += 1
+        }
+        
+        return nil
+    }
+    
+    func drawSegment(row: Int, section: Int, numberOfSegments: Int, numberOfRings: Int, color: UIColor, context: CGContext) {
         
         let geoSet = calculateAngles(row: row, section: section, numberOfSegments: numberOfSegments, numberOfRings: numberOfRings)
         
@@ -70,7 +105,7 @@ class CircleView:UIView {
                         }
                     }
                     
-                    self.drawSegment(row: itemCount, section: sectionCount, numberOfSegments: section.count, numberOfRings: dataSet.count, color: color, context: context, emoji:"A")
+                    self.drawSegment(row: itemCount, section: sectionCount, numberOfSegments: section.count, numberOfRings: dataSet.count, color: color, context: context)
                     
                     itemCount += 1
                 }
@@ -155,7 +190,7 @@ class CircleView:UIView {
         
         let borderAngle = ((idealBorder + 1) / circumference) * (2 * π) // Not sure why this works
         
-        let originAngle:CGFloat = (π * (1/6)) * -5
+        let originAngle:CGFloat = self.originAngle()
         
         var startAngle = originAngle + CGFloat(row) * segmentSize + (borderAngle / 2)
         var endAngle = startAngle + (segmentSize - borderAngle)
@@ -182,34 +217,6 @@ class CircleView:UIView {
         
         return (startAngle: startAngle, endAngle: endAngle, radius:radius, radiusMiddle: radius - (arcWidth / 2), arcWidth:arcWidth, center:center, segmentCenterPoint:CGPoint(x: center.x + adjacent, y: center.y + opposite))
     }
-    
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        if let touch = touches.first {
-            let location = touch.location(in: self)
-            
-            processTouch(location: location)
-        }
-    }
-    
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let touch = touches.first {
-            let location = touch.location(in: self)
-            
-            processTouch(location: location)
-        }
-    }
-    
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let touch = touches.first {
-            let location = touch.location(in: self)
-            
-            processTouch(location: location)
-        }
-    }
-    
-    
     
     func processTouch(location: CGPoint) {
         let center = CGPoint(x:self.bounds.width/2, y: self.bounds.width/2)
@@ -252,7 +259,7 @@ class CircleView:UIView {
             
             //print("angleSize: \(angleSize)")
             
-            let originAngle:CGFloat = (π * (1/6)) * -5
+            let originAngle:CGFloat = self.originAngle()
             
             var consolidatedAngle = angle - originAngle
             
@@ -278,6 +285,32 @@ class CircleView:UIView {
             
             // Reload the view
             self.setNeedsDisplay()
+        }
+    }
+    
+    func originAngle() -> CGFloat {
+        
+        // Determine the offset angle required given the dataSet
+        
+        if dataSet.count > 1 {
+            
+            let dataItemsCount:CGFloat = CGFloat(dataSet[1].count)
+            
+            // An angle of 0 points rightwards.
+            // We want the first item to actually be on the top, this depends on how many segments there will be.
+            
+            
+            let angleWidth:CGFloat = CGFloat(π * 2) / dataItemsCount
+            
+            // 0 - 90 degress minus half an angleWidth should put it in the right spot
+            
+            
+            return 0 - 1.5708 - (angleWidth / 2)
+            
+            return (π * (1/6)) * -5
+        } else {
+            // Just a circle
+            return 0
         }
     }
     

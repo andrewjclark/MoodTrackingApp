@@ -135,7 +135,7 @@ class EventRange:CustomStringConvertible {
 }
 
 
-class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource, CircleViewControllerDelegate {
+class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSource {
 
     @IBOutlet weak var tableView: UITableView!
     
@@ -183,11 +183,13 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.dataStoreSaved), name: NSNotification.Name.init("kDataStoreSaved"), object: nil)
         
-        // Setup the eventrange
+        // Setup the eventrange and the settings / analysis buttons
         if eventRange == nil {
             self.summaryRange = GroupType.summary
             
             navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "66_Gear"), style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedSettings))
+            
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Data", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedData))
         }
         
         updateTitle()
@@ -196,7 +198,27 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     func userPressedSettings() {
+        // SettingsViewController
         
+        if let settingsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SettingsViewController") as? SettingsViewController {
+            // Put
+            let navCon = UINavigationController(rootViewController: settingsVC)
+            self.present(navCon, animated: true) {
+                
+            }
+        }
+    }
+    
+    func userPressedData() {
+        // DataAnalysisViewController
+        
+        if let settingsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DataAnalysisViewController") as? DataAnalysisViewController {
+            // Put
+            let navCon = UINavigationController(rootViewController: settingsVC)
+            self.present(navCon, animated: true) {
+                
+            }
+        }
     }
     
     func userTappedTitle() {
@@ -267,8 +289,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         
         // Add a down arrow
         if summaryRange != nil {
-            
-            
             newTitleAttr.append(NSAttributedString(string: " ▼", attributes: [NSFontAttributeName : UIFont.systemFont(ofSize: 12, weight: UIFontWeightMedium), NSForegroundColorAttributeName:UIColor.white.withAlphaComponent(0.5)]))
         }
         
@@ -277,8 +297,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
         if let label = navigationItem.titleView as? UILabel {
             label.removeFromSuperview()
         }
-        
-        // Make it
         
         // Setup title tap
         let tapRec = UITapGestureRecognizer(target: self, action: #selector(ViewController.userTappedTitle))
@@ -317,10 +335,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     override func prefersHiddenNavBar() -> Bool {
-        if summaryRange != nil {
-            // return true
-        }
-        
         return false
     }
     
@@ -352,16 +366,10 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 newRange.startDate = Date().firstDayOfMonth(offset: -3)
             }
             
-            
             newRange.type = summaryRange
             
             self.eventRange = newRange
         }
-        
-        
-        
-        
-        
         
         if let eventRange = eventRange {
             // We have an event range, use these events
@@ -429,7 +437,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 self.resultsByDay = newResultsByDay
                 
             } else {
-                self.resultsByDay = eventRanges(from: eventRange.events, type: eventRange.subType(), withinRange: eventRange) // We need to reverse these results due to the way event order gets flipping in this method. TODO.
+                self.resultsByDay = eventRanges(from: eventRange.events, type: eventRange.subType(), withinRange: eventRange)
             }
         }
     }
@@ -466,7 +474,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                     eventRanges.append(newRange)
 
                     // Move currentDate up by a day
-                    
                     currentDate = currentDate.startOfDay(offset: 1)
                 }
                 
@@ -513,12 +520,10 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 
                 if let range = eventRangeLookup[dateString] {
                     range.events.append(event)
-                    
-                    //range.events.insert(event, at: 0) // The events list ought to be from earliest event to latest, ie, the earlier in the array then the closer to startDate it is. We fetch objects from most recent first and iterate, therefore we insert them at the start, rather than append them.
                 }
             }
         }
-        
+ 
         return eventRanges
     }
     
@@ -534,12 +539,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == kSectionNewMood || section == kSectionNewEvent {
-            return 1
-        } else if section == kSectionMoods {
-            return 0
-            //return results.count
-        } else if section == kSectionDays {
+        if section == kSectionDays {
             return resultsByDay.count
         }
             
@@ -591,17 +591,14 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             }
             
             // Find the average mood from this range.
-            
             var count:Int = 0
             var moodSum:Float = 0
             
             for event in days {
-                if event.type > 0 && event.type < 1000 {
-                    // It's a mood
-                    
-                    let emoji = DataFormatter.moodEmoji(typeInt: Int(event.type))
-                    
-                    moodSum += emoji.linearMood
+                let emoji = DataFormatter.emoji(typeInt: Int(event.type))
+                
+                if let linearMood = emoji.linearMood {
+                    moodSum += linearMood
                     count += 1
                 }
             }
@@ -610,31 +607,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             
             if count > 0 {
                 let averageMood = moodSum / Float(count)
-                
-                if averageMood >= -1 {
-                    // Sad
-                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad).emoji
-                }
-                
-                if averageMood >= -0.6 {
-                    // Down
-                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.down).emoji
-                }
-                
-                if averageMood >= -0.2 {
-                    // Neutral
-                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral).emoji
-                }
-                
-                if averageMood >= 0.2 {
-                    // Calm
-                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm).emoji
-                }
-                
-                if averageMood >= 0.6 {
-                    // Great
-                    averageMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited).emoji
-                }
+                averageMoodEmoji = GraphEvent(averageLinearMood: averageMood, date: nil).emoji
             }
             
             let dateString = resultsByDay[indexPath.row].startDateString()
@@ -670,13 +643,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        if indexPath.section == kSectionNewMood {
-            presentInputView(type: ItemType.mood)
-            // self.queryMood()
-        } else if indexPath.section == kSectionNewEvent {
-            presentInputView(type: ItemType.event)
-            // self.queryEvent()
-        } else if indexPath.section == kSectionDays {
+        if indexPath.section == kSectionDays {
             
             let range = resultsByDay[indexPath.row]
             
@@ -702,8 +669,6 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                     navigationController?.pushViewController(vc, animated: true)
                 }
             }
-            
-            
         }
     }
     
@@ -714,7 +679,8 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
 
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         if indexPath.section == kSectionDays {
-            return [UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Clear", handler: { (action, indexPath) in
+            
+            let clearAction = UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Clear", handler: { (action, indexPath) in
                 
                 let range = self.resultsByDay[indexPath.row]
                 
@@ -723,7 +689,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 alertView.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action) in
                     
                 }))
-
+                
                 alertView.addAction(UIAlertAction(title: "Delete", style: UIAlertActionStyle.destructive, handler: { (action) in
                     
                     for event in range.events {
@@ -737,10 +703,33 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                     self.tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
                 }))
                 
-                self.present(alertView, animated: true, completion: { 
+                self.present(alertView, animated: true, completion: {
                     
                 })
-            })]
+            })
+            
+            let addAction = UITableViewRowAction(style: UITableViewRowActionStyle.normal, title: "Add", handler: { (action, indexPath) in
+                
+                let range = self.resultsByDay[indexPath.row]
+                
+                if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+                    
+                    view.currentMode = ItemType.mood
+                    view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+                    view.modalPresentationCapturesStatusBarAppearance = true
+                    view.eventRange = range
+                    view.delegate = self
+                    
+                    self.present(view, animated: true, completion: {
+                        
+                    })
+                }
+            })
+            
+            addAction.backgroundColor = UIColor.lightMoodBlue
+            
+            
+            return [clearAction, addAction]
         }
         
         return nil
@@ -755,20 +744,23 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
     }
     
     @IBAction func userPressedAddButton(_ sender: UIButton) {
-        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
-            
-            view.currentMode = .mood
-            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
-            view.modalPresentationCapturesStatusBarAppearance = true
-            view.delegate = self
-            
-            self.present(view, animated: true, completion: {
-                
-            })
-        }
+        
+        self.presentInputView(type: ItemType.mood)
+        
+//        if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
+//            
+//            view.currentMode = .mood
+//            view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
+//            view.modalPresentationCapturesStatusBarAppearance = true
+//            view.delegate = self
+//            
+//            self.present(view, animated: true, completion: {
+//                
+//            })
+//        }
     }
     
-    func userCreated(event: Event) {
+    override func userCreated(event: Event) {
         self.reload()
     }
 }
@@ -819,6 +811,12 @@ extension Date {
     func addMinutes(offset: Int) -> Date {
         var components = DateComponents()
         components.minute = offset
+        return Calendar.current.date(byAdding: components, to: self)!
+    }
+    
+    func addSeconds(offset: Int) -> Date {
+        var components = DateComponents()
+        components.second = offset
         return Calendar.current.date(byAdding: components, to: self)!
     }
 }

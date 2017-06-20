@@ -21,7 +21,6 @@ class GraphView:UIView {
     var labels = [UILabel]() // Labels that show the happy/sad symbols
     
     override func draw(_ rect: CGRect) {
-        
         super.draw(rect)
         
         if let context = UIGraphicsGetCurrentContext() {
@@ -95,8 +94,6 @@ class GraphView:UIView {
     }
     
     func xPos(index: Int) -> CGFloat {
-        var x:CGFloat = 0.0
-        
         if items.count >= 2 {
             // Determine the x pos
             return xPos(x: CGFloat(index) /  CGFloat(items.count - 1))

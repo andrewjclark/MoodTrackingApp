@@ -8,7 +8,6 @@
 
 import UIKit
 
-
 protocol DatePickerViewControllerDelegate:class {
     func eventUpdated(event: Event)
 }
@@ -33,6 +32,8 @@ class DatePickerViewController:UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.mainView.backgroundColor = UIColor.lightMoodBlue
     }
     
     override func viewWillAppear(_ animated: Bool) {

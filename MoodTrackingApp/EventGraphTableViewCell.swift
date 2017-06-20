@@ -13,12 +13,57 @@ class GraphEvent:Equatable {
     var linearMood:Float?
     var date = Date()
     var type = ItemType.mood
+    var name = ""
+    
+    convenience init(averageLinearMood: Float, date: Date?) {
+        
+        self.init()
+        
+        var newMoodEmoji = DataFormatter.emoji(typeInt: 0)
+        
+        if averageLinearMood >= 0.8 {
+            // Excited
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.excited.rawValue)
+            name = "excited"
+        } else if averageLinearMood >= 0.5 {
+            // Happy
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.happy.rawValue)
+            name = "happy"
+        } else if averageLinearMood >= 0.3 {
+            // Calm
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.calm.rawValue)
+            name = "calm"
+        } else if averageLinearMood >= -0.3 {
+            // Neutral
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.neutral.rawValue)
+            name = "neutral"
+        } else if averageLinearMood >= -0.5 {
+            // Down
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.down.rawValue)
+            name = "down"
+        } else if averageLinearMood >= -0.8 {
+            // Sad
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.sad.rawValue)
+            name = "sad"
+        } else {
+            // Depressed
+            newMoodEmoji = DataFormatter.emoji(typeInt: EventType.depressed.rawValue)
+            name = "depressed"
+        }
+        
+        // Generate this new average mood
+        self.emoji = newMoodEmoji.emoji
+        self.linearMood = averageLinearMood
+        
+        if let date = date {
+            self.date = date
+        }
+    }
 }
 
 func ==(lhs: GraphEvent, rhs: GraphEvent) -> Bool {
     return lhs.linearMood == rhs.linearMood && lhs.emoji == rhs.emoji && lhs.date == rhs.date
 }
-
 
 
 public enum DisplayFormat {
@@ -93,29 +138,25 @@ class EventGraphTableViewCell:UITableViewCell {
         
         let newGraphEvent = GraphEvent()
         
-        if event.type >= 1000 {
-            // Event
-            let bundle = DataFormatter.eventEmoji(typeInt: Int(event.type))
-            
-            newGraphEvent.emoji = bundle.emoji
-            newGraphEvent.type = .event
-        } else {
-            // Mood
-            let bundle = DataFormatter.moodEmoji(typeInt: Int(event.type))
-            
-            newGraphEvent.emoji = bundle.emoji
-            newGraphEvent.linearMood = bundle.linearMood
-            
-            newGraphEvent.type = .mood
-        }
+        let bundle = DataFormatter.emoji(typeInt: Int(event.type))
+        
+        newGraphEvent.emoji = bundle.emoji
+        newGraphEvent.linearMood = bundle.linearMood
         
         if let date = event.date {
             newGraphEvent.date = date as Date
         }
         
+        if event.type >= 1000 {
+            // Event
+            newGraphEvent.type = ItemType.event
+        } else {
+            // Mood
+            newGraphEvent.type = ItemType.mood
+        }
+        
         return newGraphEvent
     }
-    
     
     func graphEvents(rawEvents: [Event]) -> [GraphEvent] {
         
@@ -136,51 +177,19 @@ class EventGraphTableViewCell:UITableViewCell {
                 
                 if event.type < 1000 {
                     // It's a mood
-                    let moodEmoji = DataFormatter.moodEmoji(typeInt: Int(event.type))
+                    let moodEmoji = DataFormatter.emoji(typeInt: Int(event.type))
                     
                     if let date = event.date {
                         let moodDate = df.string(from: date as Date)
                         
                         if currentDate != moodDate {
-                            // New date! Add it if needed.
+                            // New date! Add the linear mood.
                             
                             if moodCount > 0 {
-                                let averageMood = moodAverage / Float(moodCount)
                                 
-                                var newMoodEmoji = DataFormatter.moodEmoji(typeInt: 0)
+                                let averageLinearMood = moodAverage / Float(moodCount)
                                 
-                                if averageMood >= -1 {
-                                    // Sad
-                                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad)
-                                }
-                                
-                                if averageMood >= -0.6 {
-                                    // Down
-                                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.down)
-                                }
-                                
-                                if averageMood >= -0.2 {
-                                    // Neutral
-                                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral)
-                                }
-                                
-                                if averageMood >= 0.2 {
-                                    // Calm
-                                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm)
-                                }
-                                
-                                if averageMood >= 0.6 {
-                                    // Great
-                                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited)
-                                }
-                                
-                                // Add this new average mood
-                                
-                                let newGraphEvent = GraphEvent()
-                                newGraphEvent.emoji = newMoodEmoji.emoji
-                                newGraphEvent.date = lastDate
-                                newGraphEvent.linearMood = averageMood
-                                
+                                let newGraphEvent = GraphEvent(averageLinearMood: averageLinearMood, date: lastDate)
                                 newEvents.append(newGraphEvent)
                             }
                             
@@ -191,9 +200,11 @@ class EventGraphTableViewCell:UITableViewCell {
                             lastDate = date as Date
                         }
                         
-                        // Adding to the current one
-                        moodAverage += moodEmoji.linearMood
-                        moodCount += 1
+                        if let linearMood = moodEmoji.linearMood {
+                            // Adding to the current one
+                            moodAverage += linearMood
+                            moodCount += 1
+                        }
                     }
                 }
             }
@@ -201,48 +212,9 @@ class EventGraphTableViewCell:UITableViewCell {
             // Deal with the final mood
             
             if moodCount > 0 {
-                let averageMood = moodAverage / Float(moodCount)
+                let averageLinearMood = moodAverage / Float(moodCount)
                 
-                var newMoodEmoji = DataFormatter.moodEmoji(typeInt: 0)
-                var newMoodType = 0
-                
-                if averageMood >= -1 {
-                    // Sad
-                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.sad)
-                    newMoodType = EventType.sad.rawValue
-                }
-                
-                if averageMood >= -0.6 {
-                    // Down
-                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.down)
-                    newMoodType = EventType.down.rawValue
-                }
-                
-                if averageMood >= -0.2 {
-                    // Neutral
-                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.neutral)
-                    newMoodType = EventType.neutral.rawValue
-                }
-                
-                if averageMood >= 0.2 {
-                    // Calm
-                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.calm)
-                    newMoodType = EventType.calm.rawValue
-                }
-                
-                if averageMood >= 0.6 {
-                    // Great
-                    newMoodEmoji = DataFormatter.moodEmoji(type: EventType.excited)
-                    newMoodType = EventType.excited.rawValue
-                }
-                
-                // Add this new average mood
-                
-                let newGraphEvent = GraphEvent()
-                newGraphEvent.emoji = newMoodEmoji.emoji
-                newGraphEvent.date = lastDate as Date
-                newGraphEvent.linearMood = averageMood
-                
+                let newGraphEvent = GraphEvent(averageLinearMood: averageLinearMood, date: lastDate)
                 newEvents.append(newGraphEvent)
             }
             
@@ -310,6 +282,7 @@ class EventGraphTableViewCell:UITableViewCell {
                     newGraphItem.value = lastResult
                     
                 } else {
+                    
                     // Mood
                     
                     var shouldShowEmoji = false

@@ -26,42 +26,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
         
+        SoundManager.primeSounds()
         
-        
-        /*
-        UINavigationBar.appearance().barTintColor = UIColor(red: 234.0/255.0, green: 46.0/255.0, blue: 73.0/255.0, alpha: 1.0)
+        UINavigationBar.appearance().barTintColor = UIColor.moodBlue
         UINavigationBar.appearance().tintColor = UIColor.white
-        UINavigationBar.appearance().titleTextAttributes = [NSForegroundColorAttributeName : UIColor.white]
-*/
-        
-        
-        // Current date
-        let currentDate = Date()
+        UINavigationBar.appearance().titleTextAttributes = [NSFontAttributeName : UIFont.systemFont(ofSize: 18, weight: UIFontWeightMedium), NSForegroundColorAttributeName:UIColor.white]
         
         DataStore.shared.setupLocalNotifs()
-        /*
-        let newMood = DataStore.shared.newMood()
-        newMood.scale = 1.0 // happy
+        // DataStore.shared.saveContext()
         
-        let sadMood = DataStore.shared.newMood()
-        sadMood.scale = -1.0 // sad
+        // Test Analysis
         
-        let midMood = DataStore.shared.newMood()
-        midMood.scale = 0.0 // middle
-        
-        DataStore.shared.saveContext()
-        */
-        
-        // _ = DataStore.shared.newEvent(type: "", customEmoji: nil, note: nil)
-        
-        DataStore.shared.saveContext()
-        
-        DataStore.shared.printAllEvents()
+        DataAnalyser.sharedAnalyser.shallowAnalysis()
+        DataAnalyser.sharedAnalyser.performCausalAnalysis()
         
         return true
     }
     
-    
+    /*
     func setUpLocalNotification(hour: Int, minute: Int) -> Date {
         
         // have to use NSCalendar for the components
@@ -87,6 +69,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         dateFire = calendar.date(from: fireComponents)!
         return dateFire
     }
+    */
     
     @available(iOS 10.0, *)
     
@@ -94,15 +77,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         
         if let type = response.notification.request.content.userInfo["type"] as? Int {
             
-            if let rootVC = UIApplication.shared.keyWindow?.rootViewController as? ViewController {
-                if type == 0 {
-                    // Mood
-                    rootVC.presentInputView(type: ItemType.mood)
-                } else if type == 1 {
-                    // Event
-                    rootVC.presentInputView(type: ItemType.event)
+            DispatchQueue.main.async {
+                
+                if let nav = UIApplication.shared.keyWindow?.rootViewController as? UINavigationController {
+                    
+                    if let rootVC = nav.visibleViewController as? ViewController {
+                        
+                        if type == 0 {
+                            // Mood
+                            rootVC.presentInputView(type: ItemType.mood)
+                        } else if type == 1 {
+                            // Event
+                            rootVC.presentInputView(type: ItemType.event)
+                        }
+                    }
                 }
             }
+            
+            
         }
     }
     

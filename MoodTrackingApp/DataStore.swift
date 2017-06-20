@@ -224,13 +224,7 @@ class DataStore {
         }
     }
     
-    func resetLocalNotifs() {
-        let center = UNUserNotificationCenter.current()
-        center.removeAllDeliveredNotifications()
-        center.removeAllPendingNotificationRequests()
-    }
-    
-    func setupLocalNotifs() {
+    func setupTestNotifs() {
         
         var type = NotifType.mood
         
@@ -260,9 +254,9 @@ class DataStore {
         }
         
         var lastCount = 0
-        var secondsCount = 3600
+        var secondsCount = 5
         
-        for _ in 1...10 {
+        for _ in 1...2 {
             
             let content = UNMutableNotificationContent()
             
@@ -275,11 +269,13 @@ class DataStore {
             
             var hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
             
+            /*
             while hourComponent >= 22 || hourComponent <= 7 {
                 newTime += 3600
                 hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
             }
-            
+            */
+ 
             // Setup the userInfo so we know what screen to present the user.
             
             content.userInfo = ["type":type.rawValue]
@@ -310,7 +306,108 @@ class DataStore {
             })
             
             lastCount = newTime
-            secondsCount += 900
+            secondsCount += 5
+        }
+        
+    }
+    
+    func resetLocalNotifs() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllDeliveredNotifications()
+        center.removeAllPendingNotificationRequests()
+    }
+    
+    func setupLocalNotifs() {
+        
+        // temp for testing
+        
+        //self.setupTestNotifs()
+        //return
+        
+        
+        var type = NotifType.mood
+        
+        self.resetLocalNotifs()
+        
+        // Find the date of the most recent item
+        
+        
+        if SettingsHelper.isSettingEnabled(key: SettingsKey.notifications) {
+            
+            var timeSince = Int.max
+            
+            if let events = self.fetchAllEvents() {
+                if let date = events.first?.date {
+                    
+                    let tempSince:Int = Int(Date().timeIntervalSince(date as Date))
+                    
+                    if tempSince < timeSince {
+                        timeSince = tempSince
+                        
+                        if events.first!.type >= 1000 {
+                            // It's an event
+                            type = NotifType.mood
+                        } else {
+                            // It's a mood
+                            type = NotifType.event
+                        }
+                    }
+                }
+            }
+            
+            var lastCount = 0
+            var secondsCount = 3600
+            
+            for _ in 1...10 {
+                
+                let content = UNMutableNotificationContent()
+                
+                var newTime = lastCount + secondsCount
+                
+                var bodyString = ""
+                
+                // If the newTime falls between 10pm and 7am then postpone it.
+                let calendar = Calendar.current
+                
+                var hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
+                
+                while hourComponent >= 22 || hourComponent <= 7 {
+                    newTime += 3600
+                    hourComponent = calendar.component(.hour, from: Date(timeIntervalSinceNow: TimeInterval(newTime)))
+                }
+                
+                // Setup the userInfo so we know what screen to present the user.
+                
+                content.userInfo = ["type":type.rawValue]
+                
+                if type == .mood {
+                    bodyString = "How are you feeling?"
+                    type = .event
+                } else if type == .event {
+                    bodyString = "What have you been doing?"
+                    type = .mood
+                }
+                
+                if timeSince < Int.max {
+                    bodyString += "\nYour last entry was \(timeString(seconds: timeSince + newTime)) ago."
+                }
+                
+                content.body = bodyString
+                content.sound = UNNotificationSound.default()
+                content.categoryIdentifier = "com.andrewjclark.moodtrackingapp.localnotification"
+                
+                let trigger = UNTimeIntervalNotificationTrigger.init(timeInterval: TimeInterval(newTime), repeats: false)
+                let request = UNNotificationRequest.init(identifier: "localnotification.\(newTime)seconds", content: content, trigger: trigger)
+                
+                // Schedule the notification.
+                let center = UNUserNotificationCenter.current()
+                center.add(request, withCompletionHandler: { (error) in
+                    
+                })
+                
+                lastCount = newTime
+                secondsCount += 900
+            }
         }
     }
 }
