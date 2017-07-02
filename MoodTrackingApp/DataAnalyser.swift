@@ -27,6 +27,7 @@ class DataAnalyser {
     var moodsCounts = [EventCount]()
     var eventCorrelations = [EventCorrelation]()
     var topEventCorrelations = [EventCorrelation]()
+    var numberOfSignificantCorrelations = 0
     
     var totalEventCount = 0
     var totalMoodCount = 0
@@ -37,8 +38,12 @@ class DataAnalyser {
     static let sharedAnalyser = DataAnalyser()
     private init () {}
     
+    func anaylseData() {
+        shallowAnalysis()
+        performCausalAnalysis()
+    }
     
-    func shallowAnalysis() {
+    private func shallowAnalysis() {
         
         if let fetched = DataStore.shared.fetchEvents(startDate: Date().startOfDay(offset: -30), endDate: Date()) {
             print(fetched.count)
@@ -105,8 +110,6 @@ class DataAnalyser {
                     df.dateFormat = "hh:mm a"
                     
                     print(df.string(from: date as Date))
-                } else {
-                    print("null")
                 }
                 
                 //print(emoji.name)
@@ -169,7 +172,6 @@ class DataAnalyser {
             self.moodsCounts = newMoodOccs
             self.totalMoodCount = newMoodCount
             
-            
             // Mood Summary - ensure there is a -2,-1,0,1,2 of each mood summary
             
             for number in -1...1 {
@@ -180,21 +182,11 @@ class DataAnalyser {
             
             self.totalMoodsBreakdown = moodCount
             
-            print("")
-            
-            
-            
-            print("highestMoodEvent: \(highestMoodEvent)")
-            
-            print("lowestMoodEvent: \(lowestMoodEvent)")
-            
-            print("newOccs: \(newOccs)")
-            
-            print("totalEventCount: \(totalEventCount)")
-            
-            print("moodBreakDown: \(moodBreakDown)")
-            
-            print("")
+//            print("highestMoodEvent: \(highestMoodEvent)")
+//            print("lowestMoodEvent: \(lowestMoodEvent)")
+//            print("newOccs: \(newOccs)")
+//            print("totalEventCount: \(totalEventCount)")
+//            print("moodBreakDown: \(moodBreakDown)")
             
             self.highestAllTime = highestMoodEvent
             self.lowestAllTime = lowestMoodEvent
@@ -202,15 +194,12 @@ class DataAnalyser {
             
             if moodCount > 0 {
                 averageMood = averageMood / Float(moodCount)
-                print("averageMood: \(averageMood)")
                 self.averageMood = GraphEvent(averageLinearMood: averageMood, date: nil)
             }
-
-            print("")
         }
     }
     
-    func performCausalAnalysis() {
+    private func performCausalAnalysis() {
         
         if let fetchedEvents = DataStore.shared.fetchEvents(startDate: Date().startOfDay(offset: -30), endDate: Date()) {
             print(fetchedEvents.count)
@@ -228,8 +217,29 @@ class DataAnalyser {
                         // This is a mood!
                         // Clear the buffer, Krunk
                         
+                        // Remove any buffered events that are too much earlier than this event.
+                        eventBuffer = eventBuffer.filter({ (event) -> Bool in
+                            
+                            if let bufferDate = event.date {
+                                
+//                                print("bufferDate      : \(bufferDate)")
+//                                print("eventDate       : \(eventDate)")
+                                
+                                let interval:TimeInterval = 3 * 60 * 60 * -1
+//                                print("eventDate - \(interval): \((eventDate as Date).addingTimeInterval(interval))")
+                                
+                                if (bufferDate as Date) > (eventDate as Date).addingTimeInterval(interval) {
+                                    // It's within the range
+                                    return true
+                                }
+                            }
+                            
+                            return false
+                        })
+                        
                         for bufferedEvent in eventBuffer {
                             if let bufferedEventDate = bufferedEvent.date {
+                                
                                 let correlation = Correlation()
                                 
                                 // Assign the buffered event details
@@ -245,35 +255,36 @@ class DataAnalyser {
                             }
                         }
                         
-                        eventBuffer.removeAll()
+                        //eventBuffer.removeAll()
                     }
                 }
             }
             
-            print("correlations: \(correlations)")
+            //print("correlations: \(correlations)")
             
             self.eventCorrelations = summariseCorrelations(correlations: correlations)
-            
-            self.topEventCorrelations = self.eventCorrelations.filter({ (correlation) -> Bool in
-                // if correlation.correlationStrength() >= 0.3 && correlation.linearMoodCount >= 2 {
-//                if correlation.linearMoodCount >= 0 {
-//                    // This correlation looks pretty strong.
-//                    return true
-//                } else {
-//                    return false
-//                }
-                
-                return true
-            })
+            self.topEventCorrelations = self.eventCorrelations
             
             self.topEventCorrelations.sort(by: { (eventA, eventB) -> Bool in
                 return eventA.correlationConfidence() > eventB.correlationConfidence()
             })
             
-            print("self.eventCorrelations: \(self.eventCorrelations)")
-            print("self.topEventCorrelations: \(self.topEventCorrelations)")
             
-            print("")
+            // See how many of these topEventCorrelations are significant, set numberOfSignificantCorrelations
+            
+            self.numberOfSignificantCorrelations = 0
+            
+            for correlation in self.topEventCorrelations {
+                if correlation.correlationConfidence() > 0.3 {
+                    self.numberOfSignificantCorrelations += 1
+                } else {
+                    break
+                }
+            }
+            
+//            print("self.eventCorrelations: \(self.eventCorrelations)")
+//            print("self.topEventCorrelations: \(self.topEventCorrelations)")
+//            print("numberOfSignificantCorrelations: \(numberOfSignificantCorrelations)")
         }
     }
     
@@ -282,7 +293,7 @@ class DataAnalyser {
         
         // We now have a bunch of correlations between events and moods. We want to distill this down and determine the average change in mood caused by each event type.
         
-        var eventShift = [Int:[Float]]() // This dict groups together all of the linear moods caused by each eventType. We can then average this.
+        var eventShift = [Int:[Correlation]]() // This dict groups together all of the linear moods caused by each eventType. We can then average them out
         
         for correlation in correlations {
             
@@ -292,48 +303,64 @@ class DataAnalyser {
             if let linearMood = DataFormatter.emoji(typeInt: eventType).linearMood {
                 
                 if var floatArray = eventShift[moodType] {
-                    floatArray.append(linearMood)
+                    floatArray.append(correlation)
                     eventShift[moodType] = floatArray
                 } else {
-                    eventShift[moodType] = [linearMood]
+                    eventShift[moodType] = [correlation]
                 }
             }
         }
         
         var eventCorrelations = [EventCorrelation]()
         
-        for (eventType, floatArray) in eventShift {
+        for (eventType, correlationArray) in eventShift {
             
             let newEventCorrelation = EventCorrelation()
             newEventCorrelation.eventType = eventType
             
-            var averageLinearMood:Float = 0
+            var floatArray = [Float]()
+            var weightArray = [Float]()
             
-            for float in floatArray {
-                averageLinearMood += float
+            for correlation in correlationArray {
+                if let linearMood = DataFormatter.emoji(typeInt: correlation.moodType).linearMood {
+                    floatArray.append(linearMood)
+                    weightArray.append(correlation.weight())
+                }
             }
             
-            if floatArray.count > 0 {
-                averageLinearMood = averageLinearMood / Float(floatArray.count)
+            // Add up the linear moods
+            var averageLinearMood:Float = 0
+            
+            if floatArray.count > 0 && floatArray.count == weightArray.count {
                 
-                print("\(DataFormatter.emoji(typeInt: eventType).emoji) averageLinearMood: \(averageLinearMood)")
+                // Add up the weighted average. We do this by multiplying each floatMood by it's weight, then divide all of that by the sum of all of the weights
+                
+                var weightToDivide:Float = 0
+                
+                for index in 0...floatArray.count-1 {
+                    
+                    let linearMood = floatArray[index]
+                    let weight = weightArray[index]
+                    
+                    averageLinearMood += linearMood * weight
+                    weightToDivide += weight
+                }
+                
+                averageLinearMood = averageLinearMood / weightToDivide
                 
                 // Now we have the average, we can determine the standard deviation
                 
                 var deviance:Float = 0
                 
                 for float in floatArray {
-                    print("float: \(float)")
                     let difference = float - averageLinearMood
-                    print("difference: \(difference)")
+                    
                     deviance += pow(difference, 2)
-                    print("deviance: \(deviance)")
                 }
                 
                 deviance = deviance / Float(floatArray.count)
                 
                 let standardDeviation = sqrt(deviance)
-                print("standardDeviation: \(standardDeviation)")
                 
                 newEventCorrelation.standardDeviation = standardDeviation
                 newEventCorrelation.averageLinearMood = averageLinearMood
@@ -343,9 +370,9 @@ class DataAnalyser {
             }
         }
         
-        print("eventShift: \(eventShift)")
+        //print("eventShift: \(eventShift)")
         
-        print("eventCorrelations: \(eventCorrelations)")
+        //print("eventCorrelations: \(eventCorrelations)")
         
         eventCorrelations.sort { (eventA, eventB) -> Bool in
             return eventA.correlationStrength() > eventB.correlationStrength()
@@ -373,7 +400,18 @@ class EventCorrelation: CustomStringConvertible {
     }
     
     func correlationConfidence() -> Float {
-        return Float(1 - standardDeviation) * (1 + (Float(linearMoodCount) / 5))
+        
+        let sampleSizeConfidence:Float = 1 - pow(0.9, Float(self.linearMoodCount))
+        
+        var standardDeviationConfidence:Float = 1 - self.standardDeviation
+        
+        if standardDeviationConfidence < 0 {
+            standardDeviationConfidence = 0
+        }
+        
+        let overallConfidence = sampleSizeConfidence * standardDeviationConfidence
+        
+        return overallConfidence
     }
     
     var description: String {
@@ -393,6 +431,33 @@ class Correlation: CustomStringConvertible {
     var moodDate = Date()
     
     var strength:Float = 0
+    
+    func weight() -> Float {
+        // Look at different between the eventDate and moodDate and return a weight
+        let secondsCount = Int(moodDate.timeIntervalSinceReferenceDate) - Int(eventDate.timeIntervalSinceReferenceDate) - (60 * 60) // Offset by one hour, this produce a period of one hour where the weight is 1
+        
+        // A topEnd of 2 hours produces a weight decay of 2 hours from 1 to 0, combined with the offset in secondsCount, this results in a 3 hourm window, where the first hour is locked at 1 and then decays to 0.
+        let topEnd = 2 * 60 * 60
+        
+        let resultWeight = topEnd - secondsCount
+        
+        var weight:Float = Float(resultWeight) / Float(topEnd)
+        
+        // Clip these weighting results.
+        if weight > 1 {
+            weight = 1
+        } else if weight < 0 {
+            weight = 0
+        }
+        
+//        print("secondsCount: \(secondsCount)")
+//        print("topEnd: \(topEnd)")
+//        print("resultWeight: \(resultWeight)")
+//        print("weight: \(weight)")
+        
+        return weight
+    }
+    
     
     var description: String {
         

@@ -26,7 +26,11 @@ class MoodViewController:UIViewController, CircleViewControllerDelegate, MFMailC
     }
     
     func presentInputView(type: ItemType) {
-        
+        presentInputView(type: type, eventRange: nil)
+    }
+    
+    func presentInputView(type: ItemType, eventRange: EventRange?) {
+    
         DispatchQueue.main.async {
             if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
                 
@@ -34,7 +38,7 @@ class MoodViewController:UIViewController, CircleViewControllerDelegate, MFMailC
                 view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
                 view.modalPresentationCapturesStatusBarAppearance = true
                 view.delegate = self
-                
+                view.eventRange = eventRange
                 self.present(view, animated: true, completion: {
                     
                 })

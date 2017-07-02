@@ -15,6 +15,7 @@
 		5140CB201E9E42E300AD6E81 /* EmojiCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140CB1F1E9E42E300AD6E81 /* EmojiCollectionViewCell.swift */; };
 		5140CB221E9E50FE00AD6E81 /* SearchInputHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */; };
 		5140CB241E9E511F00AD6E81 /* SearchInputHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */; };
+		516BB1EC1EFAEE0C005C583D /* 69_Light@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 516BB1EB1EFAEE0C005C583D /* 69_Light@2x.png */; };
 		517EAD531EDED30B008C34D3 /* EventTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD521EDED30B008C34D3 /* EventTableViewCell.swift */; };
 		517EAD551EDED34A008C34D3 /* EventTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 517EAD541EDED34A008C34D3 /* EventTableViewCell.xib */; };
 		517EAD571EDEDC09008C34D3 /* EventGraphTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */; };
@@ -22,6 +23,10 @@
 		517EAD5B1EDEE2AD008C34D3 /* StyleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */; };
 		517EAD5D1EDEFE0E008C34D3 /* DayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517EAD5C1EDEFE0E008C34D3 /* DayViewController.swift */; };
 		5184443F1EF87E870026C310 /* Logo02_Big@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5184443E1EF87E870026C310 /* Logo02_Big@2x.png */; };
+		518B9BCE1EFC08CC006046B5 /* DataViewSummaryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 518B9BCD1EFC08CC006046B5 /* DataViewSummaryCell.xib */; };
+		518B9BD01EFC0A22006046B5 /* DataViewSummaryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518B9BCF1EFC0A22006046B5 /* DataViewSummaryCell.swift */; };
+		518B9BD21EFC1B86006046B5 /* DataViewCorrelationCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 518B9BD11EFC1B86006046B5 /* DataViewCorrelationCell.xib */; };
+		518B9BD41EFC1C1B006046B5 /* DataViewCorrelationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518B9BD31EFC1C1B006046B5 /* DataViewCorrelationCell.swift */; };
 		51A093D01EEF0B1200681BB4 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A093CF1EEF0B1200681BB4 /* SoundManager.swift */; };
 		51A093D61EEF0B2400681BB4 /* professional-reverse.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 51A093D11EEF0B2400681BB4 /* professional-reverse.aiff */; };
 		51A093D71EEF0B2400681BB4 /* professional.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 51A093D21EEF0B2400681BB4 /* professional.aiff */; };
@@ -75,6 +80,7 @@
 		5140CB1F1E9E42E300AD6E81 /* EmojiCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiCollectionViewCell.swift; sourceTree = "<group>"; };
 		5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SearchInputHeader.xib; sourceTree = "<group>"; };
 		5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchInputHeader.swift; sourceTree = "<group>"; };
+		516BB1EB1EFAEE0C005C583D /* 69_Light@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "69_Light@2x.png"; sourceTree = "<group>"; };
 		517EAD521EDED30B008C34D3 /* EventTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventTableViewCell.swift; sourceTree = "<group>"; };
 		517EAD541EDED34A008C34D3 /* EventTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EventTableViewCell.xib; sourceTree = "<group>"; };
 		517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EventGraphTableViewCell.xib; sourceTree = "<group>"; };
@@ -82,6 +88,10 @@
 		517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleHelper.swift; sourceTree = "<group>"; };
 		517EAD5C1EDEFE0E008C34D3 /* DayViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DayViewController.swift; sourceTree = "<group>"; };
 		5184443E1EF87E870026C310 /* Logo02_Big@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Logo02_Big@2x.png"; sourceTree = "<group>"; };
+		518B9BCD1EFC08CC006046B5 /* DataViewSummaryCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DataViewSummaryCell.xib; sourceTree = "<group>"; };
+		518B9BCF1EFC0A22006046B5 /* DataViewSummaryCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataViewSummaryCell.swift; sourceTree = "<group>"; };
+		518B9BD11EFC1B86006046B5 /* DataViewCorrelationCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DataViewCorrelationCell.xib; sourceTree = "<group>"; };
+		518B9BD31EFC1C1B006046B5 /* DataViewCorrelationCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataViewCorrelationCell.swift; sourceTree = "<group>"; };
 		51A093CF1EEF0B1200681BB4 /* SoundManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		51A093D11EEF0B2400681BB4 /* professional-reverse.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = "professional-reverse.aiff"; sourceTree = "<group>"; };
 		51A093D21EEF0B2400681BB4 /* professional.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = professional.aiff; sourceTree = "<group>"; };
@@ -173,11 +183,16 @@
 				51DF20161EF8136D00FD0BF7 /* SettingsHelper.swift */,
 				51EDDEE71EEA36A300C39A98 /* DatePickerViewController.swift */,
 				51DF201A1EF8293E00FD0BF7 /* DataAnalysisViewController.swift */,
+				518B9BCF1EFC0A22006046B5 /* DataViewSummaryCell.swift */,
+				518B9BCD1EFC08CC006046B5 /* DataViewSummaryCell.xib */,
 				517EAD5A1EDEE2AD008C34D3 /* StyleHelper.swift */,
+				518B9BD31EFC1C1B006046B5 /* DataViewCorrelationCell.swift */,
+				518B9BD11EFC1B86006046B5 /* DataViewCorrelationCell.xib */,
 				51A093CF1EEF0B1200681BB4 /* SoundManager.swift */,
 				51D0E9491E894DB30034458F /* DataStore.swift */,
 				51A093D11EEF0B2400681BB4 /* professional-reverse.aiff */,
 				51DF20181EF81C5A00FD0BF7 /* DataAnalyser.swift */,
+				516BB1EB1EFAEE0C005C583D /* 69_Light@2x.png */,
 				51A093D21EEF0B2400681BB4 /* professional.aiff */,
 				51A093D31EEF0B2400681BB4 /* rock.aiff */,
 				51A093D41EEF0B2400681BB4 /* simple.aiff */,
@@ -195,8 +210,8 @@
 				517EAD561EDEDC09008C34D3 /* EventGraphTableViewCell.xib */,
 				51D0E9511E896F880034458F /* GraphView.swift */,
 				5140CB231E9E511F00AD6E81 /* SearchInputHeader.swift */,
-				51EDDEE51EEA147A00C39A98 /* 66_Gear@2x.png */,
 				5140CB211E9E50FE00AD6E81 /* SearchInputHeader.xib */,
+				51EDDEE51EEA147A00C39A98 /* 66_Gear@2x.png */,
 				5184443E1EF87E870026C310 /* Logo02_Big@2x.png */,
 				51D0E9221E894D9A0034458F /* Assets.xcassets */,
 				51D0E9241E894D9A0034458F /* LaunchScreen.storyboard */,
@@ -349,11 +364,14 @@
 				51D0E9261E894D9A0034458F /* LaunchScreen.storyboard in Resources */,
 				51D0E9231E894D9A0034458F /* Assets.xcassets in Resources */,
 				51A093D91EEF0B2400681BB4 /* simple.aiff in Resources */,
+				516BB1EC1EFAEE0C005C583D /* 69_Light@2x.png in Resources */,
 				51D0E91E1E894D9A0034458F /* Main.storyboard in Resources */,
 				5140CB221E9E50FE00AD6E81 /* SearchInputHeader.xib in Resources */,
 				51EDDEE61EEA147A00C39A98 /* 66_Gear@2x.png in Resources */,
 				5140CB1E1E9E42D900AD6E81 /* EmojiCollectionViewCell.xib in Resources */,
+				518B9BCE1EFC08CC006046B5 /* DataViewSummaryCell.xib in Resources */,
 				5184443F1EF87E870026C310 /* Logo02_Big@2x.png in Resources */,
+				518B9BD21EFC1B86006046B5 /* DataViewCorrelationCell.xib in Resources */,
 				51A093D61EEF0B2400681BB4 /* professional-reverse.aiff in Resources */,
 				517EAD571EDEDC09008C34D3 /* EventGraphTableViewCell.xib in Resources */,
 			);
@@ -382,6 +400,7 @@
 			files = (
 				517EAD531EDED30B008C34D3 /* EventTableViewCell.swift in Sources */,
 				511DC66B1EDF03640011B05A /* MoodViewController.swift in Sources */,
+				518B9BD01EFC0A22006046B5 /* DataViewSummaryCell.swift in Sources */,
 				517EAD5B1EDEE2AD008C34D3 /* StyleHelper.swift in Sources */,
 				51D0E91B1E894D9A0034458F /* ViewController.swift in Sources */,
 				51D0E9501E8954C40034458F /* DataFormatter.swift in Sources */,
@@ -394,6 +413,7 @@
 				5122E53C1ED4B59800B7384D /* CircleView.swift in Sources */,
 				51DF20191EF81C5A00FD0BF7 /* DataAnalyser.swift in Sources */,
 				51D0E94A1E894DB30034458F /* DataStore.swift in Sources */,
+				518B9BD41EFC1C1B006046B5 /* DataViewCorrelationCell.swift in Sources */,
 				51D0E9191E894D9A0034458F /* AppDelegate.swift in Sources */,
 				51EDDEE81EEA36A300C39A98 /* DatePickerViewController.swift in Sources */,
 				517EAD5D1EDEFE0E008C34D3 /* DayViewController.swift in Sources */,

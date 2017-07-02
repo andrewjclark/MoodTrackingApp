@@ -27,12 +27,20 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        DataAnalyser.sharedAnalyser.shallowAnalysis()
+        DataAnalyser.sharedAnalyser.anaylseData()
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Close", style: UIBarButtonItemStyle.plain, target: self, action: #selector(SettingsViewController.dismissSelf))
         
         tableView.dataSource = self
         tableView.delegate = self
+        
+        view.backgroundColor = UIColor.moodBlue
+        tableView.backgroundColor = UIColor.clear
+        
+        for cellName in ["DataViewSummaryCell", "DataViewCorrelationCell"] {
+            let nib = UINib(nibName: cellName, bundle: nil)
+            self.tableView.register(nib, forCellReuseIdentifier: cellName)
+        }
         
         updateTitle()
     }
@@ -61,10 +69,17 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             
             return count > 5 ? 5 : count
         } else if section == kSectionMoodsSummary {
-            return DataAnalyser.sharedAnalyser.moodBreakDown.count // Should always be 3
+            if DataAnalyser.sharedAnalyser.moodBreakDown.count == 3 {
+                return 1
+            }
         } else if section == kSectionCorrelations {
+            
+            return DataAnalyser.sharedAnalyser.numberOfSignificantCorrelations
+            /*
             let count = DataAnalyser.sharedAnalyser.topEventCorrelations.count
+            return count
             return count > 8 ? 8 : count
+             */
         }
         
         return 0
@@ -72,13 +87,12 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        
-        cell.backgroundColor = UIColor.clear
-        
         let section = indexPath.section
         
         if section == kSectionHighest {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+            cell.backgroundColor = UIColor.clear
+            
             if let event = DataAnalyser.sharedAnalyser.highestAllTime {
                 let emoji = DataFormatter.emoji(typeInt: Int(event.type))
                 
@@ -88,7 +102,13 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             } else {
                 cell.textLabel?.text = "No highest found"
             }
+            
+            return cell
         } else if section == kSectionAverage {
+            
+            let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+            cell.backgroundColor = UIColor.clear
+            
             if let event = DataAnalyser.sharedAnalyser.averageMood {
                 
                 cell.textLabel?.text = "Average mood is: \(event.emoji)"
@@ -96,7 +116,12 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             } else {
                 cell.textLabel?.text = "No average found"
             }
+            
+            return cell
         } else if section == kSectionLowest {
+            
+            let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+            cell.backgroundColor = UIColor.clear
             if let event = DataAnalyser.sharedAnalyser.lowestAllTime {
                 let emoji = DataFormatter.emoji(typeInt: Int(event.type))
                 
@@ -106,7 +131,12 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             } else {
                 cell.textLabel?.text = "No lower found"
             }
+            
+            return cell
         } else if section == kSectionEvents {
+            
+            let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+            cell.backgroundColor = UIColor.clear
             let event = DataAnalyser.sharedAnalyser.eventCounts[indexPath.row]
             
             let emoji = DataFormatter.emoji(typeInt: event.type)
@@ -122,7 +152,12 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             }
             
             cell.textLabel?.text = newText
+            
+            return cell
         } else if section == kSectionMoods {
+            
+            let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+            cell.backgroundColor = UIColor.clear
             let event = DataAnalyser.sharedAnalyser.moodsCounts[indexPath.row]
             
             let emoji = DataFormatter.emoji(typeInt: event.type)
@@ -138,54 +173,95 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
             }
             
             cell.textLabel?.text = newText
+            
+            return cell
         } else if section == kSectionMoodsSummary {
             
-            var categoryInt = 0
+            let summaryCell = tableView.dequeueReusableCell(withIdentifier: "DataViewSummaryCell") as! DataViewSummaryCell
             
-            if indexPath.row == 0 {
-                // Happy
-                categoryInt = 1
-            } else if indexPath.row == 1 {
-                // Neutral
-                categoryInt = 0
-            } else if indexPath.row == 2 {
-                // Neutral
-                categoryInt = -1
-            }
+            summaryCell.backgroundColor = UIColor.clear
             
-            let moodCount = DataAnalyser.sharedAnalyser.moodBreakDown[categoryInt]!
             
-            let ev = GraphEvent(averageLinearMood: Float(categoryInt) / 2, date: nil)
+            var counts = [Int]()
             
-            let moodNames = ["Positive", "Neutral", "Negative"]
-            let theMood = moodNames[indexPath.row]
+            counts.append(DataAnalyser.sharedAnalyser.moodBreakDown[1]!)
+            counts.append(DataAnalyser.sharedAnalyser.moodBreakDown[0]!)
+            counts.append(DataAnalyser.sharedAnalyser.moodBreakDown[-1]!)
             
-            if DataAnalyser.sharedAnalyser.totalMoodsBreakdown > 0 {
-                let percentage = Float(moodCount) / Float(DataAnalyser.sharedAnalyser.totalMoodsBreakdown) * 100
+            // Percentages
+            
+            
+            let totalMoods = DataAnalyser.sharedAnalyser.totalMoodsBreakdown
+            
+            var percentages = [Float]()
+            for count in counts {
                 
-                cell.textLabel?.text = "You feel \(ev.emoji) \(theMood) \(Int(roundf(percentage)))% of the time"
+                let newPerc = Float(count) / Float(totalMoods)
+                
+                percentages.append(newPerc)
             }
+            
+            summaryCell.layout(emoji: [DataFormatter.emoji(typeInt: EventType.happy.rawValue).emoji,DataFormatter.emoji(typeInt: EventType.neutral.rawValue).emoji,DataFormatter.emoji(typeInt: EventType.sad.rawValue).emoji], title: ["Positive","Neutral","Negative"], percentage: percentages)
+            
+            return summaryCell
+            
         } else if section == kSectionCorrelations {
+            
+            
+            let correlationCell = tableView.dequeueReusableCell(withIdentifier: "DataViewCorrelationCell") as! DataViewCorrelationCell
+            
+            
             let correlation = DataAnalyser.sharedAnalyser.topEventCorrelations[indexPath.row]
             
             let eventEmoji = DataFormatter.emoji(typeInt: correlation.eventType)
             
-            let event = GraphEvent(averageLinearMood: correlation.averageLinearMood, date: nil)
+            let moodEvent = GraphEvent(averageLinearMood: correlation.averageLinearMood, date: nil)
             
-            cell.textLabel?.text = "\(eventEmoji.emoji) \(eventEmoji.name.capitalized) -> \(event.emoji) \(event.name.capitalized) C:\(correlation.correlationConfidence()) (\(correlation.linearMoodCount) times)"
+            let overallConfidence = Int(round(correlation.correlationConfidence() * 100))
+            
+            var confidencceString = ""
+            
+            if overallConfidence > 50 {
+                confidencceString = "very confident (\(overallConfidence)%)"
+            } else if overallConfidence > 20 {
+                confidencceString = "somewhat confident (\(overallConfidence)%)"
+            } else {
+                confidencceString = "not confident (\(overallConfidence)%)"
+            }
+            
+            correlationCell.backgroundColor = UIColor.clear
+            
+            correlationCell.layout(leftEmoji: eventEmoji.emoji, joinTerm: "\(eventEmoji.name.capitalized) -> \(moodEvent.name.capitalized)", rightEmoji: moodEvent.emoji, detail: confidencceString.capitalized)
+            
+            return correlationCell
+            
+            
+            
+            
+            /*
+            let detailCell = tableView.dequeueReusableCell(withIdentifier: "DetailCell", for: indexPath)
+            
+            detailCell.backgroundColor = UIColor.clear
+            
+            
+            
+            detailCell.textLabel?.text = "\(eventEmoji.emoji) \(eventEmoji.name.capitalized) -> \(event.emoji) \(event.name.capitalized)"
+            detailCell.detailTextLabel?.text = "        \(confidencceString.capitalized)"
+            
+            return detailCell
+             */
         }
         
-        /*
-         } else if section == kSectionCorrelations {
-         return DataAnalyser.sharedAnalyser.topEventCorrelations.count
-         }
-         */
-        
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        cell.backgroundColor = UIColor.clear
         return cell
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 60
+        if indexPath.section == kSectionMoodsSummary {
+            return 150
+        }
+        return 70
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -218,6 +294,15 @@ class DataAnalysisViewController: MoodViewController, UITableViewDataSource, UIT
         }
         
         return nil
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        view.tintColor = UIColor.white
+        
+        if let view = view as? UITableViewHeaderFooterView {
+            view.textLabel?.textAlignment = NSTextAlignment.center
+            view.textLabel?.textColor = UIColor.moodBlue
+        }
     }
     
 }

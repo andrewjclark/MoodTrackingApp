@@ -249,7 +249,7 @@ class DayViewController: MoodViewController, UITableViewDelegate, UITableViewDat
         
         if indexPath.section == kSectionAddNew {
             
-            self.presentInputView(type: ItemType.mood)
+            self.presentInputView(type: ItemType.mood, eventRange: eventRange)
             
 //            if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
 //                

@@ -189,7 +189,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
             
             navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(named: "66_Gear"), style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedSettings))
             
-            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Data", style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedData))
+            navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "69_Light"), style: UIBarButtonItemStyle.plain, target: self, action: #selector(ViewController.userPressedData))
         }
         
         updateTitle()
@@ -700,7 +700,7 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                     
                     DataStore.shared.saveContext()
                     
-                    self.tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
+                    self.tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.fade)
                 }))
                 
                 self.present(alertView, animated: true, completion: {
@@ -712,18 +712,9 @@ class ViewController: MoodViewController, UITableViewDelegate, UITableViewDataSo
                 
                 let range = self.resultsByDay[indexPath.row]
                 
-                if let view = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "CircleViewController") as? CircleViewController {
-                    
-                    view.currentMode = ItemType.mood
-                    view.modalPresentationStyle = UIModalPresentationStyle.overFullScreen
-                    view.modalPresentationCapturesStatusBarAppearance = true
-                    view.eventRange = range
-                    view.delegate = self
-                    
-                    self.present(view, animated: true, completion: {
-                        
-                    })
-                }
+                self.presentInputView(type: ItemType.mood, eventRange: range)
+                
+                
             })
             
             addAction.backgroundColor = UIColor.lightMoodBlue

@@ -35,10 +35,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         DataStore.shared.setupLocalNotifs()
         // DataStore.shared.saveContext()
         
-        // Test Analysis
         
-        DataAnalyser.sharedAnalyser.shallowAnalysis()
-        DataAnalyser.sharedAnalyser.performCausalAnalysis()
+        for offset in [-60, -3600, -5000, -7200, -10800, -100000] {
+            let corrA = Correlation()
+            corrA.eventDate = Date().addingTimeInterval(TimeInterval(offset)) // A second ago
+            corrA.moodDate = Date()
+            let minutes = Int(offset / 60)
+            print("minutes \(minutes) weight(): \(corrA.weight())")
+        }
+        
+        /*
+        let corrA = Correlation()
+        corrA.eventDate = Date().addingTimeInterval(-1) // A second ago
+        corrA.moodDate = Date()
+        print("corrA.weight(): \(corrA.weight())")
+        
+        let corrB = Correlation()
+        corrB.eventDate = Date().addingTimeInterval(-3600) // An hour ago
+        corrB.moodDate = Date()
+        print("corrB.weight(): \(corrB.weight())")
+        */
+        
+        print("")
+        
+        // Test Analysis
+        DataAnalyser.sharedAnalyser.anaylseData()
         
         return true
     }
